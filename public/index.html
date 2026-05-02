@@ -80,6 +80,16 @@
       <span id="status-text" style="font-size:0.78rem"></span>
     </div>
 
+    <!-- Exportar -->
+    <div class="export-bar">
+      <button class="btn-export btn-export-excel" onclick="exportExcel()">
+        <i class="bi bi-file-earmark-spreadsheet"></i> Excel
+      </button>
+      <button class="btn-export btn-export-pdf" onclick="exportPDF()">
+        <i class="bi bi-file-earmark-pdf"></i> PDF
+      </button>
+    </div>
+
     <!-- Tabla -->
     <div class="table-wrap">
       <table class="wine-table">
@@ -232,6 +242,9 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>

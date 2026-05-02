@@ -7,6 +7,7 @@ let map = null;
 let mapMarkers = [];
 let debounceTimer = null;
 let isUpdating = false;
+let currentWines = [];
 
 const SOURCE_LABELS = {
   cepas_argentinas: 'Cepas Argentinas',
@@ -110,6 +111,7 @@ async function loadWines() {
   try {
     const resp = await fetch(`/api/wines?${params}`);
     const wines = await resp.json();
+    currentWines = wines;
     renderWines(wines);
     document.getElementById('results-count').textContent = `${wines.length} vino${wines.length !== 1 ? 's' : ''}`;
   } catch (err) {
@@ -481,6 +483,77 @@ document.getElementById('chat-input').addEventListener('input', function() {
   this.style.height = 'auto';
   this.style.height = Math.min(this.scrollHeight, 120) + 'px';
 });
+
+/* ─── Exportar ───────────────────────────────────────────────────────────────── */
+function exportFilename(ext) {
+  const date = new Date().toLocaleDateString('es-AR').replace(/\//g, '-');
+  return `vinoapp_${date}.${ext}`;
+}
+
+function exportExcel() {
+  if (!currentWines.length) { showToast('No hay vinos para exportar', 'info'); return; }
+
+  const rows = currentWines.map(w => ({
+    'Nombre':        w.nombre        || '',
+    'Bodega':        w.bodega        || '',
+    'Cepa':          w.cepa          || '',
+    'Subzona':       w.subzona       || '',
+    'Zona':          w.zona          || '',
+    'Provincia':     w.provincia     || '',
+    'País':          w.pais          || '',
+    'Precio ($)':    w.precio        ?? '',
+    'Mín. Unidades': w.min_unidades  || 1,
+    'Proveedor':     SOURCE_LABELS[w.source] || w.source,
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = Object.keys(rows[0]).map(k => ({
+    wch: Math.min(40, Math.max(k.length + 2, ...rows.map(r => String(r[k]).length + 1))),
+  }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Vinos');
+  XLSX.writeFile(wb, exportFilename('xlsx'));
+  showToast(`Excel exportado · ${currentWines.length} vinos`, 'success');
+}
+
+function exportPDF() {
+  if (!currentWines.length) { showToast('No hay vinos para exportar', 'info'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const date = new Date().toLocaleDateString('es-AR');
+
+  doc.setFontSize(16);
+  doc.setTextColor(123, 28, 46);
+  doc.text('Vinoapp — Lista de Precios', 14, 14);
+  doc.setFontSize(9);
+  doc.setTextColor(120, 106, 90);
+  doc.text(`Exportado: ${date}   ·   ${currentWines.length} vinos`, 14, 21);
+
+  doc.autoTable({
+    startY: 26,
+    head: [['Nombre', 'Bodega', 'Cepa', 'Zona', 'Provincia', 'Precio', 'Mín.', 'Proveedor']],
+    body: currentWines.map(w => [
+      w.nombre     || '—',
+      w.bodega     || '—',
+      w.cepa       || '—',
+      w.zona       || '—',
+      w.provincia  || '—',
+      w.precio != null ? '$' + Math.round(w.precio).toLocaleString('es-AR') : '—',
+      w.min_unidades || 1,
+      SOURCE_LABELS[w.source] || w.source,
+    ]),
+    headStyles:          { fillColor: [123, 28, 46], fontSize: 8, fontStyle: 'bold' },
+    bodyStyles:          { fontSize: 7 },
+    alternateRowStyles:  { fillColor: [253, 248, 243] },
+    columnStyles:        { 5: { halign: 'right' }, 6: { halign: 'center' } },
+    margin:              { left: 14, right: 14 },
+  });
+
+  doc.save(exportFilename('pdf'));
+  showToast(`PDF exportado · ${currentWines.length} vinos`, 'success');
+}
 
 /* ─── Init ───────────────────────────────────────────────────────────────────── */
 async function init() {

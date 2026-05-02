@@ -143,6 +143,32 @@ body {
 .filter-price { width: 110px; }
 .filters label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
 
+/* ─── Barra de exportación ───────────────────────────────────────────────────── */
+.export-bar {
+  padding: 8px 24px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: white;
+  border-bottom: 1px solid var(--border);
+}
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: none;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn-export:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn-export:active { transform: translateY(0); }
+.btn-export-excel { background: #16A34A; color: white; }
+.btn-export-pdf   { background: #DC2626; color: white; }
+
 /* ─── Barra de estado / update ──────────────────────────────────────────────── */
 .status-bar {
   padding: 8px 24px;
