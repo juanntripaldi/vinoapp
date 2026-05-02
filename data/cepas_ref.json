@@ -1,0 +1,202 @@
+[
+  {
+    "canonical": "Malbec",
+    "aliases": ["malbec","malbe","malbes","malbeck","malbek","malvec","malbec 100%","100% malbec","100%malbec","100%puro malbec","gran malbec","malbec puro","malbec organico","malbec natural","malbec rose","malbec dulce","malbec viñas viejas","malbec rosado","blanc de malbec","burbujas de malbec"]
+  },
+  {
+    "canonical": "Cabernet Sauvignon",
+    "aliases": ["cabernet sauvignon","cab sauv","cab. sauv","cab sauvignon","cabernet 100%","cebernet sauvignon","cabernet","c.sauvignon","c sauvignon","cabernet sauv","cs","cabernetr sauvignon","cabernet sauvigon","cabernet sauvignion"]
+  },
+  {
+    "canonical": "Cabernet Franc",
+    "aliases": ["cabernet franc","cab franc","cab. franc","c.franc","c franc","cabernet-c franc","cfranc","cabernet franc puro","c.franc puro","c franc puro","blanco de c franc","rose de cabernet franc","guapo c franc","franc"]
+  },
+  {
+    "canonical": "Merlot",
+    "aliases": ["merlot","merlot organico"]
+  },
+  {
+    "canonical": "Syrah",
+    "aliases": ["syrah","sirah","shiraz","gran sirah"]
+  },
+  {
+    "canonical": "Bonarda",
+    "aliases": ["bonarda","bonarda pura","charbono bonarda"]
+  },
+  {
+    "canonical": "Pinot Noir",
+    "aliases": ["pinot noir","pinot nori","pnot noir","pinot negre","pinot nero","pinot","pinot noir organico","rosado pinot noir","rose de pinot noir","nature rose de pinot","sin pinot"]
+  },
+  {
+    "canonical": "Sangiovese",
+    "aliases": ["sangiovese","sangiovesse","sangio"]
+  },
+  {
+    "canonical": "Petit Verdot",
+    "aliases": ["petit verdot","petit verdhot","petit verdoth","p.verdoth","p verdoth","p.verdot","petit verdot"]
+  },
+  {
+    "canonical": "Torrontés",
+    "aliases": ["torrontes","torrontés","torontes","torro","tardio de torrontes","torrontes 2012","torrontes organico","torrontes brutal","torrontes de hilario","torrontés organico"]
+  },
+  {
+    "canonical": "Chardonnay",
+    "aliases": ["chardonnay","chardonay","chardo","chardonay","chardonnay organico","chardonnay 2022"]
+  },
+  {
+    "canonical": "Sauvignon Blanc",
+    "aliases": ["sauvignon blanc","sauvignon blancc","s.blanc","s blanc","sblanc","sauvignonnase","sauvignon blan","sauv blanc","sb","blanco sauvignon blanc"]
+  },
+  {
+    "canonical": "Chenin Blanc",
+    "aliases": ["chenin blanc","chenin","chenin b"]
+  },
+  {
+    "canonical": "Viognier",
+    "aliases": ["viognier","viogner"]
+  },
+  {
+    "canonical": "Tannat",
+    "aliases": ["tannat","tannat puro","tanat"]
+  },
+  {
+    "canonical": "Garnacha",
+    "aliases": ["garnacha","garnacha negra","garnach","grenache","garnacha lavalle"]
+  },
+  {
+    "canonical": "Carmenere",
+    "aliases": ["carmenere","carmener","carmenère"]
+  },
+  {
+    "canonical": "Ancellotta",
+    "aliases": ["ancellotta","ancellota"]
+  },
+  {
+    "canonical": "Tempranillo",
+    "aliases": ["tempranillo","tempra"]
+  },
+  {
+    "canonical": "Gewurztraminer",
+    "aliases": ["gewurztraminer","gewurstraminer","geurztraminer","gewürztraminer"]
+  },
+  {
+    "canonical": "Pinot Gris",
+    "aliases": ["pinot gris","pinot grigio","pinot griggio"]
+  },
+  {
+    "canonical": "Semillón",
+    "aliases": ["semillon","semillón","semillon blanc","greta semillon"]
+  },
+  {
+    "canonical": "Pedro Giménez",
+    "aliases": ["pedro gimenez","pedro giménez","pedro ximenes","pedro ximenez","p.gimenez","p gimenez","p.ximenes","p ximenes"]
+  },
+  {
+    "canonical": "Criolla",
+    "aliases": ["criolla","criolla grande","criolla chica","criolla blanca","criolla tinta","criollas","criolla angastaco","criolla hualfin","criolla blanca y tinta","criolla grande y chica","criollas blancas","criollas tintas"]
+  },
+  {
+    "canonical": "Moscatel",
+    "aliases": ["moscatel","mocatel","moscatel blanco","moscatel pink","moscatel rosado seco","moscatel-torrontes"]
+  },
+  {
+    "canonical": "Blend",
+    "aliases": ["blend","corte","assemblage","assamblage","coupage","mezcla","trivarietal","cofermentado","cofermentado blend","red blend","white blend","winemakers blend","field blend","blend tinto","blend blancas","blend de blancas","blendo","gsm","tinto gsm","cuatro cepas","cepas tradicionales","varias cepas","blend de añadas","blend de finca","blend de historias","blend de malbec","blend de rio","blend de rose","blend de tintas","blend y malbec","blanco blend","blanco seco blend","tinto blend","rosado blend","blend rose","blend malbec-franc","blend malbec-sirah","belnd"]
+  },
+  {
+    "canonical": "Rosé",
+    "aliases": ["rosé","rose","rosado","rosado de c franc","rosado de criollas","rosado de sirah","rosado de tintas","rosado champenoise","rose delicat","rose rcm","rose de malbec","rose de pinot noir","rose de cabernet franc"]
+  },
+  {
+    "canonical": "Espumante",
+    "aliases": ["espumante","brut","extra brut","brut nature","extra brut rose","brut nature rose","brut reserve","cava brut","pet nat","pet nat rose","blanc de blanc","blanc de blancs","blanc de noir","demi sec","champenoise","sparkling","sparkling wine","selected sparkling","nature","extra dry","prosecco","glera","espumante nature","ice sec","semiseco cava","cava"]
+  },
+  {
+    "canonical": "Naranjo",
+    "aliases": ["naranjo","orange","naranjo blend","naranjo organico","naranjo de criolla","naranjo de criolas","naranjo-sirah-c franc","blanco de pieles","skin contact"]
+  },
+  {
+    "canonical": "Nebbiolo",
+    "aliases": ["nebbiolo","tinto nebbiolo"]
+  },
+  {
+    "canonical": "Barbera",
+    "aliases": ["barbera"]
+  },
+  {
+    "canonical": "Mencía",
+    "aliases": ["mencia","mencía"]
+  },
+  {
+    "canonical": "Zinfandel",
+    "aliases": ["zinfandel","primitivo","tinto nero d avola","nero de davola","nero d avola"]
+  },
+  {
+    "canonical": "Monastrell",
+    "aliases": ["monastrell","monastrell-bonarda"]
+  },
+  {
+    "canonical": "Malvasia",
+    "aliases": ["malvasia","malvasia 2016"]
+  },
+  {
+    "canonical": "Albariño",
+    "aliases": ["albariño","albarino"]
+  },
+  {
+    "canonical": "Riesling",
+    "aliases": ["riesling","riesling (limitado)"]
+  },
+  {
+    "canonical": "Marsanne",
+    "aliases": ["marsanne","marsanne y rousan","marsanne-roussane","marsanne-sauvignon blanc"]
+  },
+  {
+    "canonical": "Viura",
+    "aliases": ["viura","garnacha y viura","70%viura y 30% garnac"]
+  },
+  {
+    "canonical": "Tocai Friulano",
+    "aliases": ["tocai","tokai","tockaij friulano","blanco tocai frilano"]
+  },
+  {
+    "canonical": "Bequignol",
+    "aliases": ["bequignol","bequiniol","bequignol"]
+  },
+  {
+    "canonical": "Treixadura",
+    "aliases": ["treixadura"]
+  },
+  {
+    "canonical": "Grüner Veltliner",
+    "aliases": ["gruner veltliner","grüner veltliner","100% gruner veltliner"]
+  },
+  {
+    "canonical": "Aglianico",
+    "aliases": ["aglianico"]
+  },
+  {
+    "canonical": "Cinsault",
+    "aliases": ["cinsault"]
+  },
+  {
+    "canonical": "Trosseau",
+    "aliases": ["trosseau","trousseau"]
+  },
+  {
+    "canonical": "Petit Manseng",
+    "aliases": ["petit manseng","petit manseng/gros"]
+  },
+  {
+    "canonical": "Cereza",
+    "aliases": ["cereza"]
+  },
+  {
+    "canonical": "Isabella",
+    "aliases": ["isabella"]
+  },
+  {
+    "canonical": "Ancellotta",
+    "aliases": ["ancellotta"]
+  }
+]

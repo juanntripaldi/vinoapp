@@ -1,0 +1,27 @@
+{
+  "paises": [
+    "Francia", "España", "Chile", "Italia", "Uruguay", "Nueva Zelanda",
+    "EEUU", "Alemania", "Portugal", "Australia", "Sudáfrica", "Argentina",
+    "Brasil", "Bolivia", "Perú"
+  ],
+  "provincias_argentina": [
+    "Mendoza", "San Juan", "Salta", "Neuquén", "Río Negro", "La Rioja",
+    "Catamarca", "Jujuy", "Tucumán", "Córdoba", "Buenos Aires", "Chubut",
+    "San Luis", "Santa Fe", "Entre Ríos", "Corrientes", "Misiones",
+    "Formosa", "Chaco", "Santiago del Estero", "La Pampa", "Río Negro",
+    "Tierra del Fuego", "Santa Cruz"
+  ],
+  "regiones_vitivinicolas": {
+    "Mendoza": ["Luján de Cuyo", "Valle de Uco", "Maipú", "San Rafael", "San Martín", "Rivadavia", "Lavalle", "Las Heras", "Este de Mendoza", "General Alvear"],
+    "San Juan": ["Pedernal", "Calingasta", "Zonda", "Valle de Tulum", "Ullum", "Jáchal"],
+    "Salta": ["Valles Calchaquíes", "Cafayate", "Cachi", "Molinos", "Angastaco", "Payogasta"],
+    "Neuquén": ["San Patricio del Chañar", "Añelo"],
+    "Río Negro": ["Alto Valle del Río Negro"],
+    "La Rioja": ["Chilecito", "Arauco"],
+    "Catamarca": ["Belén", "Santa María"],
+    "Jujuy": ["Quebrada de Humahuaca"],
+    "Tucumán": ["Valles Calchaquíes"],
+    "Chubut": ["Trevelin", "Sarmiento"]
+  },
+  "zonas_multi_provincia": ["Cuyo", "Patagonia", "NOA"]
+}

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Vinoapp - Lista de Precios</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- ─── Sidebar ──────────────────────────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <i class="bi bi-cup-straw"></i>
+    <span>Vinoapp</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item active" data-view="lista">
+      <i class="bi bi-table"></i> Lista de Vinos
+    </a>
+    <a href="#" class="nav-item" data-view="dashboard">
+      <i class="bi bi-bar-chart-line"></i> Dashboard
+    </a>
+    <a href="#" class="nav-item" data-view="consultor">
+      <i class="bi bi-robot"></i> Consultor IA
+    </a>
+  </nav>
+  <div class="sidebar-update">
+    <button class="btn-update-all" id="btn-update-all" onclick="updateAll()">
+      <i class="bi bi-arrow-clockwise"></i> Actualizar Todo
+    </button>
+  </div>
+</aside>
+
+<!-- ─── Main ─────────────────────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- ═══ Vista: Lista ═════════════════════════════════════════════════════════ -->
+  <div id="view-lista" class="view active">
+    <div class="page-header">
+      <span class="page-title"><i class="bi bi-table"></i> Lista de Vinos</span>
+      <span class="results-count" id="results-count">Cargando...</span>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters">
+      <input type="text" class="filter-search" id="f-nombre" placeholder="🔍 Buscar por nombre o bodega..." oninput="debouncedLoad()">
+      <select class="filter-select" id="f-source" onchange="loadWines()">
+        <option value="">Todos los proveedores</option>
+        <option value="cepas_argentinas">Cepas Argentinas</option>
+        <option value="mp_drinks">MP Drinks</option>
+        <option value="rustico">Rústico</option>
+      </select>
+      <select class="filter-select" id="f-cepa" onchange="loadWines()">
+        <option value="">Todas las cepas</option>
+      </select>
+      <select class="filter-select" id="f-pais" onchange="loadWines()">
+        <option value="">Todos los países</option>
+      </select>
+      <select class="filter-select" id="f-provincia" onchange="loadWines()">
+        <option value="">Todas las provincias</option>
+      </select>
+      <select class="filter-select" id="f-zona" onchange="loadWines()">
+        <option value="">Todas las zonas</option>
+      </select>
+      <input type="number" class="filter-price" id="f-min" placeholder="$ mín" oninput="debouncedLoad()">
+      <input type="number" class="filter-price" id="f-max" placeholder="$ máx" oninput="debouncedLoad()">
+      <button style="background:none;border:none;cursor:pointer;color:var(--wine);font-size:0.85rem;" onclick="clearFilters()">✕ Limpiar</button>
+    </div>
+
+    <!-- Estado de fuentes -->
+    <div class="status-bar">
+      <div class="source-pills" id="source-pills">
+        <span class="source-pill"><span class="dot dot-cepas"></span><span>Cepas Argentinas</span><button class="btn-refresh-source" onclick="updateSource('cepas_argentinas')"><i class="bi bi-arrow-clockwise"></i></button></span>
+        <span class="source-pill"><span class="dot dot-mp"></span><span>MP Drinks</span><button class="btn-refresh-source" onclick="updateSource('mp_drinks')"><i class="bi bi-arrow-clockwise"></i></button></span>
+        <span class="source-pill"><span class="dot dot-rustico"></span><span>Rústico</span><button class="btn-refresh-source" onclick="updateSource('rustico')"><i class="bi bi-arrow-clockwise"></i></button></span>
+      </div>
+      <span id="status-text" style="font-size:0.78rem"></span>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-wrap">
+      <table class="wine-table">
+        <thead>
+          <tr>
+            <th onclick="setSort('nombre')" class="sortable" id="th-nombre">Nombre <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('bodega')" class="sortable" id="th-bodega">Bodega <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('cepa')" class="sortable" id="th-cepa">Cepa <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('subzona')" class="sortable" id="th-subzona">Subzona <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('zona')" class="sortable" id="th-zona">Zona <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('provincia')" class="sortable" id="th-provincia">Provincia <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('pais')" class="sortable" id="th-pais">País <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('precio')" class="sortable" id="th-precio">Precio <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('min_unidades')" class="sortable" id="th-min_unidades">Mín. Bot. <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('source')" class="sortable" id="th-source">Proveedor <span class="sort-icon">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="wines-tbody">
+          <tr><td colspan="10" class="empty-state" style="padding:60px 20px">
+            <div>
+              <i class="bi bi-cup" style="font-size:2.5rem;color:var(--gold);display:block;margin-bottom:12px"></i>
+              <strong>No hay vinos cargados</strong><br>
+              <span style="font-size:0.85rem;color:var(--text-muted)">Hacé clic en "Actualizar Todo" para importar los datos de los proveedores</span>
+            </div>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ Vista: Dashboard ══════════════════════════════════════════════════════ -->
+  <div id="view-dashboard" class="view">
+    <div class="page-header">
+      <span class="page-title"><i class="bi bi-bar-chart-line"></i> Dashboard</span>
+      <button style="background:none;border:none;cursor:pointer;color:var(--wine);font-size:0.85rem;" onclick="loadDashboard()"><i class="bi bi-arrow-clockwise"></i> Refrescar</button>
+    </div>
+
+    <div class="dashboard-wrap">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="d-total">—</div>
+          <div class="stat-label">Total Vinos</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-value" id="d-bodegas">—</div>
+          <div class="stat-label">Bodegas</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-value" id="d-cepas">—</div>
+          <div class="stat-label">Cepas Distintas</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-value" id="d-proveedores">—</div>
+          <div class="stat-label">Proveedores</div>
+        </div>
+      </div>
+
+      <!-- Proveedores resumen -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3><i class="bi bi-pie-chart"></i> Vinos por Proveedor</h3>
+          <canvas id="chart-proveedores"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3><i class="bi bi-bar-chart"></i> Precio Promedio por Proveedor</h3>
+          <canvas id="chart-precios-prov"></canvas>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3><i class="bi bi-bar-chart-horizontal"></i> Vinos por Cepa (Top 12)</h3>
+          <canvas id="chart-cepas"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3><i class="bi bi-currency-dollar"></i> Precio Promedio por Cepa</h3>
+          <canvas id="chart-precio-cepa"></canvas>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3><i class="bi bi-bar-chart-horizontal"></i> Vinos por Bodega (Top 10)</h3>
+          <canvas id="chart-bodegas"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3><i class="bi bi-map"></i> Vinos por Provincia</h3>
+          <canvas id="chart-provincias"></canvas>
+        </div>
+      </div>
+
+      <!-- Mapa -->
+      <div class="chart-card" style="margin-bottom:24px">
+        <h3><i class="bi bi-geo-alt"></i> Mapa de Regiones Vitivinícolas</h3>
+        <div id="wine-map"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Vista: Consultor IA ═══════════════════════════════════════════════════ -->
+  <div id="view-consultor" class="view">
+    <div class="page-header">
+      <span class="page-title"><i class="bi bi-robot"></i> Consultor IA</span>
+    </div>
+
+    <div class="chat-wrap">
+      <div id="api-warning" class="api-warning" style="display:none">
+        <strong>⚠️ Clave API no configurada.</strong>
+        Para usar el Consultor IA necesitás agregar tu clave de Anthropic:<br>
+        1. Copiá el archivo <code>.env.example</code> como <code>.env</code><br>
+        2. Abrilo y reemplazá <code>tu_clave_aqui</code> con tu clave de <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a><br>
+        3. Reiniciá la app
+      </div>
+
+      <div class="chat-intro">
+        <strong>¿Cómo puedo ayudarte?</strong><br>
+        Podés pedirme que arme pedidos, recomiende vinos o compare precios. Por ejemplo:
+        <ul>
+          <li>"Armame un pedido de $50.000 con variedad de tintos"</li>
+          <li>"¿Cuál es el Malbec más barato de Cepas Argentinas?"</li>
+          <li>"Necesito 20 botellas para un evento, presupuesto $200.000"</li>
+          <li>"Comparame los Malbec entre proveedores"</li>
+        </ul>
+      </div>
+
+      <div class="chat-messages" id="chat-messages"></div>
+
+      <div class="chat-input-area">
+        <textarea id="chat-input" placeholder="Escribí tu consulta..." rows="1" onkeydown="handleChatKey(event)"></textarea>
+        <button class="btn-send" id="btn-send" onclick="sendChat()">
+          <i class="bi bi-send"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ─── Mobile Nav ────────────────────────────────────────────────────────────── -->
+<nav class="mobile-nav">
+  <a href="#" data-view="lista" class="active"><i class="bi bi-table"></i><span>Lista</span></a>
+  <a href="#" data-view="dashboard"><i class="bi bi-bar-chart-line"></i><span>Dashboard</span></a>
+  <a href="#" data-view="consultor"><i class="bi bi-robot"></i><span>IA</span></a>
+  <a href="#" onclick="updateAll(); return false;"><i class="bi bi-arrow-clockwise"></i><span>Actualizar</span></a>
+</nav>
+
+<!-- ─── Toast container ───────────────────────────────────────────────────────── -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
