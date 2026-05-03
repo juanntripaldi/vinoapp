@@ -18,6 +18,9 @@ let state = {
 };
 
 let marketPrices = {};
+let favorites = [];
+let views = [];
+let quotes = [];
 
 // ─── Conexión y carga inicial ─────────────────────────────────────────────────
 
@@ -39,6 +42,15 @@ async function init() {
   const mpDocs = await _db.collection('market_prices').find({}).toArray();
   marketPrices = {};
   mpDocs.forEach(doc => { marketPrices[doc._id] = doc.price; });
+
+  const favDocs = await _db.collection('favorites').find({}).sort({ savedAt: -1 }).toArray();
+  favorites = favDocs.map(({ _id, ...rest }) => ({ id: _id, ...rest }));
+
+  const viewDocs = await _db.collection('views').find({}).sort({ createdAt: -1 }).toArray();
+  views = viewDocs.map(({ _id, ...rest }) => ({ id: _id, ...rest }));
+
+  const quoteDocs = await _db.collection('quotes').find({}).sort({ savedAt: -1 }).toArray();
+  quotes = quoteDocs.map(({ _id, ...rest }) => ({ id: _id, ...rest })).slice(0, 50);
 }
 
 // ─── Persistencia ─────────────────────────────────────────────────────────────
@@ -296,4 +308,75 @@ function getAllForChat(limit = 400) {
   return state.wines.slice(0, limit);
 }
 
-module.exports = { init, getWines, saveWines, getOptions, getStats, getStatus, getAllForChat, getHistory, setMarketPrice };
+// ─── Favoritos ────────────────────────────────────────────────────────────────
+
+function getFavorites() { return favorites; }
+
+async function addFavorite(fav) {
+  const id = Date.now();
+  const { id: _ignored, ...data } = fav;
+  await _db.collection('favorites').insertOne({ _id: id, ...data });
+  const newFav = { id, ...data };
+  favorites.unshift(newFav);
+  return newFav;
+}
+
+async function removeFavorite(id) {
+  await _db.collection('favorites').deleteOne({ _id: id });
+  favorites = favorites.filter(f => f.id !== id);
+}
+
+async function patchFavorite(id, fields) {
+  await _db.collection('favorites').updateOne({ _id: id }, { $set: fields });
+  const fav = favorites.find(f => f.id === id);
+  if (fav) Object.assign(fav, fields);
+}
+
+// ─── Vistas guardadas ─────────────────────────────────────────────────────────
+
+function getViews() { return views; }
+
+async function addView(view) {
+  const id = Date.now();
+  const { id: _ignored, ...data } = view;
+  await _db.collection('views').insertOne({ _id: id, ...data });
+  const newView = { id, ...data };
+  views.unshift(newView);
+  return newView;
+}
+
+async function removeView(id) {
+  await _db.collection('views').deleteOne({ _id: id });
+  views = views.filter(v => v.id !== id);
+}
+
+// ─── Cotizaciones ─────────────────────────────────────────────────────────────
+
+function getQuotes() { return quotes; }
+
+async function addQuote(quote) {
+  const id = Date.now();
+  const { id: _ignored, ...data } = quote;
+  await _db.collection('quotes').insertOne({ _id: id, ...data });
+  const newQuote = { id, ...data };
+  quotes.unshift(newQuote);
+  if (quotes.length > 50) {
+    const removed = quotes.splice(50);
+    for (const q of removed) {
+      await _db.collection('quotes').deleteOne({ _id: q.id });
+    }
+  }
+  return newQuote;
+}
+
+async function removeQuote(id) {
+  await _db.collection('quotes').deleteOne({ _id: id });
+  quotes = quotes.filter(q => q.id !== id);
+}
+
+module.exports = {
+  init, getWines, saveWines, getOptions, getStats, getStatus, getAllForChat, getHistory, setMarketPrice,
+  getFavorites, addFavorite, removeFavorite, patchFavorite,
+  getViews, addView, removeView,
+  getQuotes, addQuote, removeQuote,
+};

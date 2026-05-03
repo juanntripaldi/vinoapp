@@ -175,9 +175,9 @@ function showView(view) {
   if (view === 'dashboard') loadDashboard();
   if (view === 'consultor') checkApiStatus();
   if (view === 'historial') loadHistory();
-  if (view === 'vistas') renderSavedViews();
-  if (view === 'favoritos') renderFavorites();
-  if (view === 'cotizador') { renderCotizador(); document.getElementById('q-cliente').value = activeQuote.cliente; document.getElementById('q-notas').value = activeQuote.notas; }
+  if (view === 'vistas') loadViews().then(() => renderSavedViews());
+  if (view === 'favoritos') loadFavorites().then(() => renderFavorites());
+  if (view === 'cotizador') { loadQuotes().then(() => renderSavedQuotes()); renderCotizador(); document.getElementById('q-cliente').value = activeQuote.cliente; document.getElementById('q-notas').value = activeQuote.notas; }
 }
 
 /* ─── Toast notifications ────────────────────────────────────────────────────── */
@@ -454,14 +454,13 @@ async function loadStatus() {
 }
 
 /* ─── Vistas Guardadas ───────────────────────────────────────────────────────── */
-const VIEWS_KEY = 'vinoapp_saved_views';
+let _views = [];
 
-function getSavedViews() {
-  try { return JSON.parse(localStorage.getItem(VIEWS_KEY) || '[]'); } catch { return []; }
-}
-
-function setSavedViews(views) {
-  localStorage.setItem(VIEWS_KEY, JSON.stringify(views));
+async function loadViews() {
+  try {
+    const resp = await fetch('/api/views');
+    _views = await resp.json();
+  } catch { _views = []; }
 }
 
 function getCurrentFilters() {
@@ -489,7 +488,7 @@ function applyFilters(f) {
   loadWines();
 }
 
-function promptSaveView() {
+async function promptSaveView() {
   const filters = getCurrentFilters();
   const hasFilters = filters.nombre || filters.min || filters.max ||
     filters.source.length || filters.cepa.length || filters.pais.length ||
@@ -499,15 +498,17 @@ function promptSaveView() {
   const name = prompt('Nombre para esta vista:');
   if (!name || !name.trim()) return;
 
-  const views = getSavedViews();
-  views.unshift({ id: Date.now(), name: name.trim(), filters, createdAt: new Date().toISOString() });
-  setSavedViews(views);
+  const view = { name: name.trim(), filters, createdAt: new Date().toISOString() };
+  try {
+    const resp = await fetch('/api/views', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(view) });
+    const saved = await resp.json();
+    _views.unshift(saved);
+  } catch { _views.unshift({ id: Date.now(), ...view }); }
   showToast(`Vista "${name.trim()}" guardada`, 'success');
 }
 
 function applyView(id) {
-  const views = getSavedViews();
-  const view = views.find(v => v.id === id);
+  const view = _views.find(v => v.id === id);
   if (!view) return;
   applyFilters(view.filters);
   showView('lista');
@@ -515,14 +516,14 @@ function applyView(id) {
 }
 
 function deleteView(id) {
-  const views = getSavedViews().filter(v => v.id !== id);
-  setSavedViews(views);
+  _views = _views.filter(v => v.id !== id);
   renderSavedViews();
   showToast('Vista eliminada', 'info');
+  fetch(`/api/views/${id}`, { method: 'DELETE' });
 }
 
 function renderSavedViews() {
-  const views = getSavedViews();
+  const views = _views;
   const list = document.getElementById('vistas-list');
   const empty = document.getElementById('vistas-empty');
 
@@ -817,19 +818,23 @@ function exportPDF() {
 }
 
 /* ─── Favoritos ──────────────────────────────────────────────────────────────── */
-const FAV_KEY = 'vinoapp_favorites';
+let _favorites = [];
 let favFilter = 'all';
 
-function getFavorites() { try { return JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); } catch { return []; } }
-function setFavorites(favs) { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }
+async function loadFavorites() {
+  try {
+    const resp = await fetch('/api/favorites');
+    _favorites = await resp.json();
+  } catch { _favorites = []; }
+}
 
 function wineId(w) { return `${w.source}::${(w.nombre || '').toLowerCase()}`; }
-function isFavorite(w) { return getFavorites().some(f => f.wineId === wineId(w)); }
+function isFavorite(w) { return _favorites.some(f => f.wineId === wineId(w)); }
 
-function handleStarClick(btn) {
+async function handleStarClick(btn) {
   const w = currentWines[parseInt(btn.dataset.idx)];
   if (!w) return;
-  const added = toggleFavorite(w);
+  const added = await toggleFavorite(w);
   btn.classList.toggle('active', added);
   btn.textContent = added ? '★' : '☆';
   btn.title = added ? 'Quitar de favoritos' : 'Agregar a favoritos';
@@ -841,47 +846,51 @@ function handleCartClick(btn) {
   if (w) addToQuote(w);
 }
 
-function toggleFavorite(w) {
-  const favs = getFavorites();
+async function toggleFavorite(w) {
   const id = wineId(w);
-  const idx = favs.findIndex(f => f.wineId === id);
-  if (idx !== -1) { favs.splice(idx, 1); setFavorites(favs); return false; }
-  favs.unshift({
-    id: Date.now(),
+  const existing = _favorites.find(f => f.wineId === id);
+  if (existing) {
+    _favorites = _favorites.filter(f => f.wineId !== id);
+    fetch(`/api/favorites/${existing.id}`, { method: 'DELETE' });
+    return false;
+  }
+  const fav = {
     wineId: id,
     wine: { nombre: w.nombre, bodega: w.bodega, cepa: w.cepa, zona: w.zona, provincia: w.provincia, precio: w.precio, min_unidades: w.min_unidades, source: w.source },
     comment: '',
     tag: null,
     savedAt: new Date().toISOString(),
-  });
-  setFavorites(favs);
+  };
+  try {
+    const resp = await fetch('/api/favorites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fav) });
+    const saved = await resp.json();
+    _favorites.unshift(saved);
+  } catch { _favorites.unshift({ id: Date.now(), ...fav }); }
   return true;
 }
 
-function updateFavorite(id, fields) {
-  const favs = getFavorites();
-  const fav = favs.find(f => f.id === id);
-  if (fav) Object.assign(fav, fields);
-  setFavorites(favs);
-}
-
 function deleteFavorite(id) {
-  setFavorites(getFavorites().filter(f => f.id !== id));
+  _favorites = _favorites.filter(f => f.id !== id);
   renderFavorites();
   showToast('Quitado de favoritos', 'info', 2000);
+  fetch(`/api/favorites/${id}`, { method: 'DELETE' });
 }
 
 function cycleFavTag(id) {
-  const favs = getFavorites();
-  const fav = favs.find(f => f.id === id);
+  const fav = _favorites.find(f => f.id === id);
   if (!fav) return;
   const cycle = [null, 'comprar', 'probar'];
   fav.tag = cycle[(cycle.indexOf(fav.tag) + 1) % cycle.length];
-  setFavorites(favs);
   renderFavorites();
+  fetch(`/api/favorites/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: fav.tag }) });
 }
 
-function saveFavComment(id, el) { updateFavorite(id, { comment: el.textContent.trim() }); }
+function saveFavComment(id, el) {
+  const comment = el.textContent.trim();
+  const fav = _favorites.find(f => f.id === id);
+  if (fav) fav.comment = comment;
+  fetch(`/api/favorites/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ comment }) });
+}
 
 function setFavFilter(filter, btn) {
   favFilter = filter;
@@ -891,12 +900,12 @@ function setFavFilter(filter, btn) {
 }
 
 function addToQuoteFromFav(favId) {
-  const fav = getFavorites().find(f => f.id === favId);
+  const fav = _favorites.find(f => f.id === favId);
   if (fav) { addToQuote(fav.wine); showView('cotizador'); }
 }
 
 function renderFavorites() {
-  const favs = getFavorites();
+  const favs = _favorites;
   const filtered = favFilter === 'all' ? favs : favs.filter(f => f.tag === favFilter);
   const countEl = document.getElementById('fav-count');
   if (countEl) countEl.textContent = `${favs.length} vino${favs.length !== 1 ? 's' : ''}`;
@@ -941,11 +950,15 @@ function renderFavorites() {
 }
 
 /* ─── Cotizador ──────────────────────────────────────────────────────────────── */
-const QUOTES_KEY = 'vinoapp_quotes';
+let _quotes = [];
 let activeQuote = { cliente: '', notas: '', items: [] };
 
-function getQuotes() { try { return JSON.parse(localStorage.getItem(QUOTES_KEY) || '[]'); } catch { return []; } }
-function setQuotes(q) { localStorage.setItem(QUOTES_KEY, JSON.stringify(q)); }
+async function loadQuotes() {
+  try {
+    const resp = await fetch('/api/quotes');
+    _quotes = await resp.json();
+  } catch { _quotes = []; }
+}
 
 function addToQuote(w) {
   const id = wineId(w);
@@ -986,21 +999,25 @@ function clearQuote() {
   renderCotizador();
 }
 
-function saveQuote() {
+async function saveQuote() {
   if (!activeQuote.items.length) { showToast('La cotización está vacía', 'info'); return; }
   const cliente = (document.getElementById('q-cliente').value.trim()) || 'Sin nombre';
   const notas = document.getElementById('q-notas').value.trim();
   activeQuote.cliente = cliente;
   activeQuote.notas = notas;
-  const quotes = getQuotes();
-  quotes.unshift({ ...activeQuote, items: activeQuote.items.map(i => ({ ...i })), id: Date.now(), savedAt: new Date().toISOString() });
-  setQuotes(quotes.slice(0, 50));
+  const quoteData = { ...activeQuote, items: activeQuote.items.map(i => ({ ...i })), savedAt: new Date().toISOString() };
+  try {
+    const resp = await fetch('/api/quotes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(quoteData) });
+    const saved = await resp.json();
+    _quotes.unshift(saved);
+    if (_quotes.length > 50) _quotes = _quotes.slice(0, 50);
+  } catch { _quotes.unshift({ id: Date.now(), ...quoteData }); }
   showToast(`Cotización "${cliente}" guardada`, 'success');
   renderSavedQuotes();
 }
 
 function loadQuote(id) {
-  const q = getQuotes().find(q => q.id === id);
+  const q = _quotes.find(q => q.id === id);
   if (!q) return;
   activeQuote = { cliente: q.cliente || '', notas: q.notas || '', items: q.items.map(i => ({ ...i })) };
   const cl = document.getElementById('q-cliente'); if (cl) cl.value = activeQuote.cliente;
@@ -1011,8 +1028,9 @@ function loadQuote(id) {
 }
 
 function deleteQuote(id) {
-  setQuotes(getQuotes().filter(q => q.id !== id));
+  _quotes = _quotes.filter(q => q.id !== id);
   renderSavedQuotes();
+  fetch(`/api/quotes/${id}`, { method: 'DELETE' });
 }
 
 function calcQuoteSummary() {
@@ -1103,7 +1121,7 @@ function renderCotizador() {
 function renderSavedQuotes() {
   const el = document.getElementById('saved-quotes-list');
   if (!el) return;
-  const quotes = getQuotes();
+  const quotes = _quotes;
   if (!quotes.length) { el.innerHTML = '<div class="saved-quotes-empty">No hay cotizaciones guardadas.</div>'; return; }
   el.innerHTML = quotes.map(q => {
     const items = q.items || [];
@@ -1180,6 +1198,32 @@ document.addEventListener('click', e => {
   }
 });
 
+/* ─── Migración desde localStorage ──────────────────────────────────────────── */
+async function migrateFromLocalStorage() {
+  const tryMigrate = async (lsKey, serverItems, postUrl, idField) => {
+    let local;
+    try { local = JSON.parse(localStorage.getItem(lsKey) || '[]'); } catch { return; }
+    if (!local.length) return;
+
+    const serverKeys = new Set(serverItems.map(i => i[idField]));
+    const toMigrate = local.filter(item => !serverKeys.has(item[idField]));
+
+    for (const item of toMigrate) {
+      try {
+        const { id: _drop, ...data } = item;
+        const resp = await fetch(postUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        const saved = await resp.json();
+        serverItems.unshift(saved);
+      } catch {}
+    }
+    localStorage.removeItem(lsKey);
+  };
+
+  await tryMigrate('vinoapp_favorites',    _favorites, '/api/favorites', 'wineId');
+  await tryMigrate('vinoapp_saved_views',  _views,     '/api/views',     'name');
+  await tryMigrate('vinoapp_quotes',       _quotes,    '/api/quotes',    'savedAt');
+}
+
 /* ─── Init ───────────────────────────────────────────────────────────────────── */
 async function init() {
   msSource    = new MultiSelect('ms-source',    'Todos los proveedores', debouncedLoad, SOURCE_LABELS);
@@ -1218,7 +1262,8 @@ async function init() {
     saveMarketPrice(input);
   });
 
-  await Promise.all([loadWines(), loadStatus(), loadFilterOptions()]);
+  await Promise.all([loadWines(), loadStatus(), loadFilterOptions(), loadFavorites(), loadViews(), loadQuotes()]);
+  await migrateFromLocalStorage();
 }
 
 init();

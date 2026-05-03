@@ -143,6 +143,84 @@ app.get('/api/history', (req, res) => {
   }
 });
 
+// ─── API: Favoritos ───────────────────────────────────────────────────────────
+app.get('/api/favorites', (_req, res) => {
+  res.json(db.getFavorites());
+});
+
+app.post('/api/favorites', async (req, res) => {
+  try {
+    const fav = await db.addFavorite(req.body);
+    res.json(fav);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/favorites/:id', async (req, res) => {
+  try {
+    await db.patchFavorite(parseInt(req.params.id), req.body);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/favorites/:id', async (req, res) => {
+  try {
+    await db.removeFavorite(parseInt(req.params.id));
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── API: Vistas guardadas ────────────────────────────────────────────────────
+app.get('/api/views', (_req, res) => {
+  res.json(db.getViews());
+});
+
+app.post('/api/views', async (req, res) => {
+  try {
+    const view = await db.addView(req.body);
+    res.json(view);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/views/:id', async (req, res) => {
+  try {
+    await db.removeView(parseInt(req.params.id));
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── API: Cotizaciones ────────────────────────────────────────────────────────
+app.get('/api/quotes', (_req, res) => {
+  res.json(db.getQuotes());
+});
+
+app.post('/api/quotes', async (req, res) => {
+  try {
+    const quote = await db.addQuote(req.body);
+    res.json(quote);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/quotes/:id', async (req, res) => {
+  try {
+    await db.removeQuote(parseInt(req.params.id));
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── API: Estado de las fuentes ───────────────────────────────────────────────
 app.get('/api/status', (req, res) => {
   try {
