@@ -48,7 +48,7 @@ app.post('/api/update', async (req, res) => {
       else if (src === 'mp_drinks')   wines = await scrapeMpDrinks();
       else if (src === 'rustico')      wines = await scrapeRustico();
 
-      db.saveWines(src, wines);
+      await db.saveWines(src, wines);
       results[src] = { success: true, count: wines.length };
     } catch (err) {
       results[src] = { success: false, error: err.message };
@@ -122,6 +122,27 @@ Siempre:
   }
 });
 
+// ─── API: Precio de mercado ───────────────────────────────────────────────────
+app.post('/api/market-price', async (req, res) => {
+  try {
+    const { key, price } = req.body;
+    if (!key) return res.status(400).json({ error: 'key requerida' });
+    await db.setMarketPrice(key, price == null || price === '' ? null : parseFloat(price));
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── API: Historial de cambios ────────────────────────────────────────────────
+app.get('/api/history', (req, res) => {
+  try {
+    res.json(db.getHistory(300));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── API: Estado de las fuentes ───────────────────────────────────────────────
 app.get('/api/status', (req, res) => {
   try {
@@ -146,7 +167,7 @@ async function autoImportIfEmpty() {
   for (const [src, fn] of Object.entries(sourceFns)) {
     try {
       const wines = await fn();
-      db.saveWines(src, wines);
+      await db.saveWines(src, wines);
       console.log(`  ✓ ${src}: ${wines.length} vinos importados`);
     } catch (err) {
       console.warn(`  ✗ ${src}: ${err.message}`);
@@ -156,32 +177,36 @@ async function autoImportIfEmpty() {
 }
 
 // ─── Inicio del servidor ──────────────────────────────────────────────────────
-app.listen(PORT, '0.0.0.0', () => {
-  let localIP = null;
-  let tailscaleIP = null;
-  try {
-    const nets = networkInterfaces();
-    for (const name of Object.keys(nets)) {
-      for (const net of nets[name]) {
-        if (net.family !== 'IPv4' || net.internal) continue;
-        // Tailscale usa el rango 100.64.0.0/10
-        if (net.address.startsWith('100.')) {
-          tailscaleIP = net.address;
-        } else if (!localIP) {
-          localIP = net.address;
+db.init().then(() => {
+  app.listen(PORT, '0.0.0.0', () => {
+    let localIP = null;
+    let tailscaleIP = null;
+    try {
+      const nets = networkInterfaces();
+      for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+          if (net.family !== 'IPv4' || net.internal) continue;
+          if (net.address.startsWith('100.')) {
+            tailscaleIP = net.address;
+          } else if (!localIP) {
+            localIP = net.address;
+          }
         }
       }
-    }
-  } catch {}
+    } catch {}
 
-  console.log('\n====================================');
-  console.log('   VINOAPP - Lista de Precios');
-  console.log('====================================');
-  console.log(`\n  Computadora:  http://localhost:${PORT}`);
-  if (localIP)     console.log(`  WiFi local:   http://${localIP}:${PORT}`);
-  if (tailscaleIP) console.log(`  Tailscale:    http://${tailscaleIP}:${PORT}`);
-  else             console.log(`  Tailscale:    (no detectado)`);
-  console.log('\n  Presioná Ctrl+C para detener\n');
+    console.log('\n====================================');
+    console.log('   VINOAPP - Lista de Precios');
+    console.log('====================================');
+    console.log(`\n  Computadora:  http://localhost:${PORT}`);
+    if (localIP)     console.log(`  WiFi local:   http://${localIP}:${PORT}`);
+    if (tailscaleIP) console.log(`  Tailscale:    http://${tailscaleIP}:${PORT}`);
+    else             console.log(`  Tailscale:    (no detectado)`);
+    console.log('\n  Presioná Ctrl+C para detener\n');
 
-  autoImportIfEmpty();
+    autoImportIfEmpty();
+  });
+}).catch(err => {
+  console.error('\n  ✗ Error al iniciar:', err.message);
+  process.exit(1);
 });

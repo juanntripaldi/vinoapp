@@ -20,6 +20,18 @@
     <a href="#" class="nav-item active" data-view="lista">
       <i class="bi bi-table"></i> Lista de Vinos
     </a>
+    <a href="#" class="nav-item" data-view="vistas">
+      <i class="bi bi-bookmark-star"></i> Vistas Guardadas
+    </a>
+    <a href="#" class="nav-item" data-view="historial">
+      <i class="bi bi-clock-history"></i> Actualizaciones
+    </a>
+    <a href="#" class="nav-item" data-view="favoritos">
+      <i class="bi bi-star"></i> Favoritos
+    </a>
+    <a href="#" class="nav-item" data-view="cotizador">
+      <i class="bi bi-cart3"></i> Cotizador <span class="nav-badge" id="quote-badge"></span>
+    </a>
     <a href="#" class="nav-item" data-view="dashboard">
       <i class="bi bi-bar-chart-line"></i> Dashboard
     </a>
@@ -41,33 +53,28 @@
   <div id="view-lista" class="view active">
     <div class="page-header">
       <span class="page-title"><i class="bi bi-table"></i> Lista de Vinos</span>
-      <span class="results-count" id="results-count">Cargando...</span>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="results-count" id="results-count">Cargando...</span>
+        <button class="btn-save-view" onclick="promptSaveView()" title="Guardar vista actual">
+          <i class="bi bi-bookmark-plus"></i> Guardar vista
+        </button>
+      </div>
     </div>
 
     <!-- Filtros -->
     <div class="filters">
       <input type="text" class="filter-search" id="f-nombre" placeholder="🔍 Buscar por nombre o bodega..." oninput="debouncedLoad()">
-      <select class="filter-select" id="f-source" onchange="loadWines()">
-        <option value="">Todos los proveedores</option>
-        <option value="cepas_argentinas">Cepas Argentinas</option>
-        <option value="mp_drinks">MP Drinks</option>
-        <option value="rustico">Rústico</option>
-      </select>
-      <select class="filter-select" id="f-cepa" onchange="loadWines()">
-        <option value="">Todas las cepas</option>
-      </select>
-      <select class="filter-select" id="f-pais" onchange="loadWines()">
-        <option value="">Todos los países</option>
-      </select>
-      <select class="filter-select" id="f-provincia" onchange="loadWines()">
-        <option value="">Todas las provincias</option>
-      </select>
-      <select class="filter-select" id="f-zona" onchange="loadWines()">
-        <option value="">Todas las zonas</option>
-      </select>
+      <div class="ms-container" id="ms-source"></div>
+      <div class="ms-container" id="ms-cepa"></div>
+      <div class="ms-container" id="ms-pais"></div>
+      <div class="ms-container" id="ms-provincia"></div>
+      <div class="ms-container" id="ms-zona"></div>
       <input type="number" class="filter-price" id="f-min" placeholder="$ mín" oninput="debouncedLoad()">
       <input type="number" class="filter-price" id="f-max" placeholder="$ máx" oninput="debouncedLoad()">
-      <button style="background:none;border:none;cursor:pointer;color:var(--wine);font-size:0.85rem;" onclick="clearFilters()">✕ Limpiar</button>
+      <select class="filter-select" id="f-min-bot" onchange="debouncedLoad()">
+        <option value="">Todas las cantidades</option>
+      </select>
+      <button class="btn-clear-filters" onclick="clearFilters()">✕ Limpiar</button>
     </div>
 
     <!-- Estado de fuentes -->
@@ -80,7 +87,7 @@
       <span id="status-text" style="font-size:0.78rem"></span>
     </div>
 
-    <!-- Exportar -->
+    <!-- Exportar + Columnas -->
     <div class="export-bar">
       <button class="btn-export btn-export-excel" onclick="exportExcel()">
         <i class="bi bi-file-earmark-spreadsheet"></i> Excel
@@ -88,6 +95,12 @@
       <button class="btn-export btn-export-pdf" onclick="exportPDF()">
         <i class="bi bi-file-earmark-pdf"></i> PDF
       </button>
+      <div class="col-toggle-wrap">
+        <button class="btn-export btn-col-toggle" onclick="toggleColPanel(event)" id="btn-col-toggle">
+          <i class="bi bi-layout-three-columns"></i> Columnas
+        </button>
+        <div class="col-panel" id="col-panel"></div>
+      </div>
     </div>
 
     <!-- Tabla -->
@@ -95,20 +108,23 @@
       <table class="wine-table">
         <thead>
           <tr>
-            <th onclick="setSort('nombre')" class="sortable" id="th-nombre">Nombre <span class="sort-icon">↕</span></th>
-            <th onclick="setSort('bodega')" class="sortable" id="th-bodega">Bodega <span class="sort-icon">↕</span></th>
-            <th onclick="setSort('cepa')" class="sortable" id="th-cepa">Cepa <span class="sort-icon">↕</span></th>
-            <th onclick="setSort('subzona')" class="sortable" id="th-subzona">Subzona <span class="sort-icon">↕</span></th>
-            <th onclick="setSort('zona')" class="sortable" id="th-zona">Zona <span class="sort-icon">↕</span></th>
-            <th onclick="setSort('provincia')" class="sortable" id="th-provincia">Provincia <span class="sort-icon">↕</span></th>
-            <th onclick="setSort('pais')" class="sortable" id="th-pais">País <span class="sort-icon">↕</span></th>
-            <th onclick="setSort('precio')" class="sortable" id="th-precio">Precio <span class="sort-icon">↕</span></th>
-            <th onclick="setSort('min_unidades')" class="sortable" id="th-min_unidades">Mín. Bot. <span class="sort-icon">↕</span></th>
-            <th onclick="setSort('source')" class="sortable" id="th-source">Proveedor <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('nombre')" class="sortable col-nombre" id="th-nombre">Nombre <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('bodega')" class="sortable col-bodega" id="th-bodega">Bodega <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('cepa')" class="sortable col-cepa" id="th-cepa">Cepa <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('subzona')" class="sortable col-subzona" id="th-subzona">Subzona <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('zona')" class="sortable col-zona" id="th-zona">Zona <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('provincia')" class="sortable col-provincia" id="th-provincia">Provincia <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('pais')" class="sortable col-pais" id="th-pais">País <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('precio')" class="sortable col-precio" id="th-precio">Precio <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('min_unidades')" class="sortable col-min_unidades" id="th-min_unidades">Mín. Bot. <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('source')" class="sortable col-source" id="th-source">Proveedor <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('market_price')" class="sortable col-market_price" id="th-market_price">P. Mercado <span class="sort-icon">↕</span></th>
+            <th onclick="setSort('market_diff')" class="sortable col-market_diff" id="th-market_diff">Vs. Mercado <span class="sort-icon">↕</span></th>
+            <th class="col-actions" style="cursor:default"></th>
           </tr>
         </thead>
         <tbody id="wines-tbody">
-          <tr><td colspan="10" class="empty-state" style="padding:60px 20px">
+          <tr><td colspan="13" class="empty-state" style="padding:60px 20px">
             <div>
               <i class="bi bi-cup" style="font-size:2.5rem;color:var(--gold);display:block;margin-bottom:12px"></i>
               <strong>No hay vinos cargados</strong><br>
@@ -120,6 +136,100 @@
     </div>
   </div>
 
+  <!-- ═══ Vista: Vistas Guardadas ═══════════════════════════════════════════════ -->
+  <div id="view-vistas" class="view">
+    <div class="page-header">
+      <span class="page-title"><i class="bi bi-bookmark-star"></i> Vistas Guardadas</span>
+    </div>
+    <div class="vistas-wrap">
+      <div class="vistas-intro">
+        <p>Guardá combinaciones de filtros para acceder rápido. Las vistas se guardan en este navegador.</p>
+      </div>
+      <div id="vistas-list" class="vistas-list">
+        <div class="vistas-empty" id="vistas-empty">
+          <i class="bi bi-bookmark" style="font-size:2rem;color:var(--gold);display:block;margin-bottom:10px"></i>
+          <p>No tenés vistas guardadas todavía.</p>
+          <p style="font-size:0.83rem;color:var(--text-muted)">Configurá los filtros en "Lista de Vinos" y hacé clic en <strong>Guardar vista</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Vista: Favoritos ════════════════════════════════════════════════════ -->
+  <div id="view-favoritos" class="view">
+    <div class="page-header">
+      <span class="page-title"><i class="bi bi-star-fill" style="color:var(--gold)"></i> Favoritos</span>
+      <span class="results-count" id="fav-count"></span>
+    </div>
+    <div class="favoritos-wrap">
+      <div class="fav-filter-bar">
+        <button class="fav-filter-btn active" onclick="setFavFilter('all', this)">Todos</button>
+        <button class="fav-filter-btn" onclick="setFavFilter('comprar', this)"><i class="bi bi-bag"></i> A comprar</button>
+        <button class="fav-filter-btn" onclick="setFavFilter('probar', this)"><i class="bi bi-cup"></i> A probar</button>
+      </div>
+      <div id="favoritos-list"></div>
+    </div>
+  </div>
+
+  <!-- ═══ Vista: Cotizador ═════════════════════════════════════════════════════ -->
+  <div id="view-cotizador" class="view">
+    <div class="page-header">
+      <span class="page-title"><i class="bi bi-cart3"></i> Cotizador</span>
+    </div>
+    <div class="cotizador-wrap">
+      <div class="quote-header-card">
+        <input id="q-cliente" type="text" placeholder="Nombre del cliente...">
+        <input id="q-notas" type="text" placeholder="Notas generales..." style="flex:2">
+        <button class="btn-quote-action btn-q-save" onclick="saveQuote()"><i class="bi bi-floppy"></i> Guardar</button>
+        <button class="btn-quote-action btn-q-export" onclick="exportQuote()"><i class="bi bi-clipboard"></i> Copiar</button>
+        <button class="btn-quote-action btn-q-clear" onclick="clearQuote()"><i class="bi bi-trash"></i> Limpiar</button>
+      </div>
+      <div class="quote-table-card">
+        <table class="quote-table">
+          <thead>
+            <tr>
+              <th>Vino</th>
+              <th>Proveedor</th>
+              <th>P. compra</th>
+              <th>Cantidad</th>
+              <th>TTV</th>
+              <th>Margen</th>
+              <th>Notas</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="quote-tbody">
+            <tr><td colspan="8" class="quote-empty"><i class="bi bi-cart" style="font-size:1.5rem;display:block;margin-bottom:8px;color:var(--gold)"></i>Agregá vinos desde la lista o desde Favoritos</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="quote-summary-card" id="quote-summary"></div>
+      <div class="saved-quotes-section">
+        <div class="saved-quotes-title"><i class="bi bi-archive"></i> Cotizaciones Guardadas</div>
+        <div id="saved-quotes-list"><div class="saved-quotes-empty">No hay cotizaciones guardadas.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Vista: Historial ══════════════════════════════════════════════════════ -->
+  <div id="view-historial" class="view">
+    <div class="page-header">
+      <span class="page-title"><i class="bi bi-clock-history"></i> Últimas Actualizaciones</span>
+      <button style="background:none;border:none;cursor:pointer;color:var(--wine);font-size:0.85rem;" onclick="loadHistory()"><i class="bi bi-arrow-clockwise"></i> Refrescar</button>
+    </div>
+    <div class="historial-wrap">
+      <div class="historial-filters">
+        <button class="hf-btn active" data-hf="all" onclick="setHistorialFilter('all', this)">Todos</button>
+        <button class="hf-btn" data-hf="added" onclick="setHistorialFilter('added', this)"><i class="bi bi-plus-circle"></i> Agregados</button>
+        <button class="hf-btn" data-hf="removed" onclick="setHistorialFilter('removed', this)"><i class="bi bi-dash-circle"></i> Quitados</button>
+        <button class="hf-btn" data-hf="price_change" onclick="setHistorialFilter('price_change', this)"><i class="bi bi-arrow-left-right"></i> Cambios de precio</button>
+      </div>
+      <div id="historial-list" class="historial-list">
+        <div class="historial-empty">Cargando historial...</div>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══ Vista: Dashboard ══════════════════════════════════════════════════════ -->
   <div id="view-dashboard" class="view">
     <div class="page-header">
@@ -128,7 +238,6 @@
     </div>
 
     <div class="dashboard-wrap">
-      <!-- Stats -->
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-value" id="d-total">—</div>
@@ -148,7 +257,6 @@
         </div>
       </div>
 
-      <!-- Proveedores resumen -->
       <div class="charts-grid">
         <div class="chart-card">
           <h3><i class="bi bi-pie-chart"></i> Vinos por Proveedor</h3>
@@ -182,7 +290,6 @@
         </div>
       </div>
 
-      <!-- Mapa -->
       <div class="chart-card" style="margin-bottom:24px">
         <h3><i class="bi bi-geo-alt"></i> Mapa de Regiones Vitivinícolas</h3>
         <div id="wine-map"></div>
@@ -232,9 +339,12 @@
 <!-- ─── Mobile Nav ────────────────────────────────────────────────────────────── -->
 <nav class="mobile-nav">
   <a href="#" data-view="lista" class="active"><i class="bi bi-table"></i><span>Lista</span></a>
-  <a href="#" data-view="dashboard"><i class="bi bi-bar-chart-line"></i><span>Dashboard</span></a>
+  <a href="#" data-view="vistas"><i class="bi bi-bookmark-star"></i><span>Vistas</span></a>
+  <a href="#" data-view="historial"><i class="bi bi-clock-history"></i><span>Historial</span></a>
+  <a href="#" data-view="favoritos"><i class="bi bi-star"></i><span>Favoritos</span></a>
+  <a href="#" data-view="cotizador"><i class="bi bi-cart3"></i><span>Pedido</span></a>
+  <a href="#" data-view="dashboard"><i class="bi bi-bar-chart-line"></i><span>Stats</span></a>
   <a href="#" data-view="consultor"><i class="bi bi-robot"></i><span>IA</span></a>
-  <a href="#" onclick="updateAll(); return false;"><i class="bi bi-arrow-clockwise"></i><span>Actualizar</span></a>
 </nav>
 
 <!-- ─── Toast container ───────────────────────────────────────────────────────── -->
