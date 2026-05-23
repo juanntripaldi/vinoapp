@@ -909,6 +909,11 @@ function renderFavorites() {
   const filtered = favFilter === 'all' ? favs : favs.filter(f => f.tag === favFilter);
   const countEl = document.getElementById('fav-count');
   if (countEl) countEl.textContent = `${favs.length} vino${favs.length !== 1 ? 's' : ''}`;
+
+  const dashboard = document.getElementById('fav-dashboard');
+  if (dashboard) dashboard.style.display = favs.length ? '' : 'none';
+  renderFavDashboard(favs);
+
   const list = document.getElementById('favoritos-list');
   if (!list) return;
 
@@ -922,31 +927,97 @@ function renderFavorites() {
   }
 
   const tagLabel = { comprar: 'A comprar', probar: 'A probar' };
-  const tagClass = { comprar: 'fav-tag-comprar', probar: 'fav-tag-probar' };
 
-  list.innerHTML = `<div class="favoritos-grid">${filtered.map(f => {
-    const w = f.wine;
-    return `<div class="fav-card${f.tag ? ' tag-' + f.tag : ''}">
-      <div class="fav-card-top">
-        <div>
-          <div class="fav-card-name">${escHtml(w.nombre || '—')}</div>
-          <div class="fav-card-sub">${[w.bodega, w.cepa].filter(Boolean).map(escHtml).join(' · ') || '—'}</div>
-        </div>
-        <div class="fav-card-price">${formatPrice(w.precio)}</div>
-      </div>
-      <div class="fav-card-meta">
-        <span class="badge-source badge-${w.source}">${SOURCE_LABELS[w.source] || w.source}</span>
-        ${(w.min_unidades || 1) > 1 ? `<span style="font-size:0.75rem;color:var(--text-muted)">Mín. ${w.min_unidades} bot.</span>` : ''}
-        ${f.tag ? `<span class="fav-tag ${tagClass[f.tag]}">${tagLabel[f.tag]}</span>` : ''}
-      </div>
-      <div class="fav-comment" contenteditable="true" onblur="saveFavComment(${f.id}, this)">${escHtml(f.comment || '')}</div>
-      <div class="fav-actions">
-        <button class="btn-fav-action btn-fav-add-quote" onclick="addToQuoteFromFav(${f.id})"><i class="bi bi-cart-plus"></i> Cotizar</button>
-        <button class="btn-fav-action btn-fav-tag" onclick="cycleFavTag(${f.id})" title="Cambiar etiqueta"><i class="bi bi-tag"></i> ${f.tag ? tagLabel[f.tag] : 'Etiquetar'}</button>
-        <button class="btn-fav-action btn-fav-delete" onclick="deleteFavorite(${f.id})"><i class="bi bi-trash"></i></button>
-      </div>
-    </div>`;
-  }).join('')}</div>`;
+  list.innerHTML = `<div class="fav-table-wrap"><table class="fav-table">
+    <thead><tr>
+      <th>Nombre</th>
+      <th>Bodega</th>
+      <th>Cepa</th>
+      <th>Proveedor</th>
+      <th>Precio</th>
+      <th>Mín.</th>
+      <th>Etiqueta</th>
+      <th>Nota</th>
+      <th></th>
+    </tr></thead>
+    <tbody>${filtered.map(f => {
+      const w = f.wine;
+      const tagBtn = f.tag
+        ? `<button class="btn-fav-tag-inline fav-tag-${f.tag}" onclick="cycleFavTag(${f.id})">${tagLabel[f.tag]}</button>`
+        : `<button class="btn-fav-tag-inline" onclick="cycleFavTag(${f.id})"><i class="bi bi-tag"></i></button>`;
+      return `<tr>
+        <td class="fav-col-nombre">${escHtml(w.nombre || '—')}</td>
+        <td class="fav-col-bodega">${escHtml(w.bodega || '—')}</td>
+        <td>${escHtml(w.cepa || '—')}</td>
+        <td><span class="badge-source badge-${w.source}">${SOURCE_LABELS[w.source] || w.source}</span></td>
+        <td class="fav-col-precio">${formatPrice(w.precio)}</td>
+        <td class="fav-col-min">${(w.min_unidades || 1) > 1 ? w.min_unidades : '—'}</td>
+        <td>${tagBtn}</td>
+        <td><div class="fav-comment-inline" contenteditable="true" onblur="saveFavComment(${f.id}, this)">${escHtml(f.comment || '')}</div></td>
+        <td class="fav-col-actions">
+          <button class="btn-fav-action btn-fav-add-quote" onclick="addToQuoteFromFav(${f.id})" title="Agregar al cotizador"><i class="bi bi-cart-plus"></i></button>
+          <button class="btn-fav-action btn-fav-delete" onclick="deleteFavorite(${f.id})" title="Quitar de favoritos"><i class="bi bi-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+function renderFavDashboard(favs) {
+  const wines = favs.map(f => f.wine);
+  const withPrice = wines.filter(w => w.precio > 0);
+  const avgPrice = withPrice.length ? withPrice.reduce((s, w) => s + w.precio, 0) / withPrice.length : 0;
+  const bodegas = new Set(wines.map(w => w.bodega).filter(Boolean));
+  const cepas = new Set(wines.map(w => w.cepa).filter(Boolean));
+
+  const elTotal  = document.getElementById('fd-total');
+  const elAvg    = document.getElementById('fd-avg');
+  const elBodegas = document.getElementById('fd-bodegas');
+  const elCepas  = document.getElementById('fd-cepas');
+  if (elTotal)   elTotal.textContent   = favs.length;
+  if (elAvg)     elAvg.textContent     = avgPrice ? '$' + Math.round(avgPrice).toLocaleString('es-AR') : '—';
+  if (elBodegas) elBodegas.textContent = bodegas.size;
+  if (elCepas)   elCepas.textContent   = cepas.size;
+
+  if (!wines.length) return;
+
+  const colors = ['#7B1C2E', '#C9A870', '#2563EB', '#16A34A', '#DC2626', '#9333EA'];
+  const provLabels = { cepas_argentinas: 'Cepas Argentinas', mp_drinks: 'MP Drinks', rustico: 'Rústico' };
+
+  const bySource = {};
+  wines.forEach(w => { bySource[w.source] = (bySource[w.source] || []).concat(w); });
+  const provKeys     = Object.keys(bySource);
+  const provCounts   = provKeys.map(k => bySource[k].length);
+  const provAvgPrice = provKeys.map(k => {
+    const ww = bySource[k].filter(w => w.precio > 0);
+    return ww.length ? Math.round(ww.reduce((s, w) => s + w.precio, 0) / ww.length) : 0;
+  });
+
+  renderChart('fav-chart-prov-pie', 'doughnut', {
+    labels: provKeys.map(k => provLabels[k] || k),
+    datasets: [{ data: provCounts, backgroundColor: colors }],
+  }, { plugins: { legend: { position: 'bottom' } } });
+
+  renderChart('fav-chart-prov-price', 'bar', {
+    labels: provKeys.map(k => provLabels[k] || k),
+    datasets: [{ label: 'Precio promedio ($)', data: provAvgPrice, backgroundColor: colors }],
+  }, { plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => '$' + v.toLocaleString('es-AR') } } } });
+
+  const bycepa = {};
+  wines.forEach(w => { if (w.cepa) bycepa[w.cepa] = (bycepa[w.cepa] || 0) + 1; });
+  const topCepas = Object.entries(bycepa).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  renderChart('fav-chart-cepas', 'bar', {
+    labels: topCepas.map(([c]) => c),
+    datasets: [{ label: 'Cantidad', data: topCepas.map(([, n]) => n), backgroundColor: '#7B1C2E' }],
+  }, { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } });
+
+  const bybodega = {};
+  wines.forEach(w => { if (w.bodega) bybodega[w.bodega] = (bybodega[w.bodega] || 0) + 1; });
+  const topBodegas = Object.entries(bybodega).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  renderChart('fav-chart-bodegas', 'bar', {
+    labels: topBodegas.map(([b]) => b),
+    datasets: [{ label: 'Vinos', data: topBodegas.map(([, n]) => n), backgroundColor: '#C9A870' }],
+  }, { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } });
 }
 
 /* ─── Cotizador ──────────────────────────────────────────────────────────────── */

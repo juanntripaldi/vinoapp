@@ -171,6 +171,49 @@
       <span class="results-count" id="fav-count"></span>
     </div>
     <div class="favoritos-wrap">
+
+      <!-- Dashboard de favoritos -->
+      <div id="fav-dashboard" style="display:none">
+        <div class="fav-stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="fd-total">—</div>
+            <div class="stat-label">Favoritos</div>
+          </div>
+          <div class="stat-card gold">
+            <div class="stat-value" id="fd-avg">—</div>
+            <div class="stat-label">Precio Promedio</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-value" id="fd-cepas">—</div>
+            <div class="stat-label">Cepas Distintas</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-value" id="fd-bodegas">—</div>
+            <div class="stat-label">Bodegas</div>
+          </div>
+        </div>
+        <div class="fav-charts-grid">
+          <div class="chart-card">
+            <h3><i class="bi bi-pie-chart"></i> Participación por Proveedor</h3>
+            <canvas id="fav-chart-prov-pie"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3><i class="bi bi-bar-chart"></i> Precio Promedio por Proveedor</h3>
+            <canvas id="fav-chart-prov-price"></canvas>
+          </div>
+        </div>
+        <div class="fav-charts-grid">
+          <div class="chart-card">
+            <h3><i class="bi bi-bar-chart-horizontal"></i> Cantidad por Cepa</h3>
+            <canvas id="fav-chart-cepas"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3><i class="bi bi-bar-chart-horizontal"></i> Top Bodegas</h3>
+            <canvas id="fav-chart-bodegas"></canvas>
+          </div>
+        </div>
+      </div>
+
       <div class="fav-filter-bar">
         <button class="fav-filter-btn active" onclick="setFavFilter('all', this)">Todos</button>
         <button class="fav-filter-btn" onclick="setFavFilter('comprar', this)"><i class="bi bi-bag"></i> A comprar</button>
