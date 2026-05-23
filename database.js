@@ -310,7 +310,12 @@ function getAllForChat(limit = 400) {
 
 // ─── Favoritos ────────────────────────────────────────────────────────────────
 
-function getFavorites() { return favorites; }
+function getFavorites() {
+  return favorites.map(f => ({
+    ...f,
+    wine: { ...f.wine, market_price: marketPrices[f.wineId] ?? null },
+  }));
+}
 
 async function addFavorite(fav) {
   const id = Date.now();

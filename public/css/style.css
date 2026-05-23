@@ -805,6 +805,14 @@ body {
 #fav-dashboard { margin-bottom: 20px; }
 .fav-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
 .fav-charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px; }
+.fav-total-card { background: var(--wine); color: white; border-radius: 12px; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.fav-total-label { font-size: 0.88rem; opacity: 0.82; margin-bottom: 4px; }
+.fav-total-sub { font-size: 0.78rem; opacity: 0.65; }
+.fav-total-value { font-size: 2rem; font-weight: 800; white-space: nowrap; }
+.fav-th-sortable { cursor: pointer; user-select: none; }
+.fav-th-sortable:hover { background: var(--wine-light); }
+.fav-sort-icon { opacity: 0.5; font-size: 0.72rem; margin-left: 3px; }
+.fav-sort-icon.active { opacity: 1; }
 .fav-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
 .fav-filter-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: white; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; color: var(--text-muted); }
 .fav-filter-btn.active { background: var(--wine); color: white; border-color: var(--wine); }

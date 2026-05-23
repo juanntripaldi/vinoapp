@@ -820,6 +820,8 @@ function exportPDF() {
 /* ─── Favoritos ──────────────────────────────────────────────────────────────── */
 let _favorites = [];
 let favFilter = 'all';
+let favSort = null;
+let favSortDir = 'asc';
 
 async function loadFavorites() {
   try {
@@ -899,6 +901,21 @@ function setFavFilter(filter, btn) {
   renderFavorites();
 }
 
+function setFavSort(col) {
+  if (favSort === col) {
+    favSortDir = favSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    favSort = col;
+    favSortDir = 'asc';
+  }
+  renderFavorites();
+}
+
+function favSortIcon(col) {
+  if (favSort !== col) return '<span class="fav-sort-icon">↕</span>';
+  return `<span class="fav-sort-icon active">${favSortDir === 'asc' ? '↑' : '↓'}</span>`;
+}
+
 function addToQuoteFromFav(favId) {
   const fav = _favorites.find(f => f.id === favId);
   if (fav) { addToQuote(fav.wine); showView('cotizador'); }
@@ -906,7 +923,7 @@ function addToQuoteFromFav(favId) {
 
 function renderFavorites() {
   const favs = _favorites;
-  const filtered = favFilter === 'all' ? favs : favs.filter(f => f.tag === favFilter);
+  let filtered = favFilter === 'all' ? favs : favs.filter(f => f.tag === favFilter);
   const countEl = document.getElementById('fav-count');
   if (countEl) countEl.textContent = `${favs.length} vino${favs.length !== 1 ? 's' : ''}`;
 
@@ -926,16 +943,31 @@ function renderFavorites() {
     return;
   }
 
+  if (favSort) {
+    const dir = favSortDir === 'asc' ? 1 : -1;
+    filtered = [...filtered].sort((a, b) => {
+      const va = a.wine[favSort];
+      const vb = b.wine[favSort];
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      if (typeof va === 'number' && typeof vb === 'number') return dir * (va - vb);
+      return dir * String(va).localeCompare(String(vb), 'es');
+    });
+  }
+
   const tagLabel = { comprar: 'A comprar', probar: 'A probar' };
+  const s = col => `class="fav-th-sortable" onclick="setFavSort('${col}')"`;
 
   list.innerHTML = `<div class="fav-table-wrap"><table class="fav-table">
     <thead><tr>
-      <th>Nombre</th>
-      <th>Bodega</th>
-      <th>Cepa</th>
+      <th ${s('nombre')}>Nombre ${favSortIcon('nombre')}</th>
+      <th ${s('bodega')}>Bodega ${favSortIcon('bodega')}</th>
+      <th ${s('cepa')}>Cepa ${favSortIcon('cepa')}</th>
       <th>Proveedor</th>
-      <th>Precio</th>
-      <th>Mín.</th>
+      <th ${s('precio')}>Precio ${favSortIcon('precio')}</th>
+      <th ${s('market_price')}>P. Mercado ${favSortIcon('market_price')}</th>
+      <th ${s('min_unidades')}>Mín. ${favSortIcon('min_unidades')}</th>
       <th>Etiqueta</th>
       <th>Nota</th>
       <th></th>
@@ -951,6 +983,7 @@ function renderFavorites() {
         <td>${escHtml(w.cepa || '—')}</td>
         <td><span class="badge-source badge-${w.source}">${SOURCE_LABELS[w.source] || w.source}</span></td>
         <td class="fav-col-precio">${formatPrice(w.precio)}</td>
+        <td class="fav-col-precio">${w.market_price ? formatPrice(w.market_price) : '—'}</td>
         <td class="fav-col-min">${(w.min_unidades || 1) > 1 ? w.min_unidades : '—'}</td>
         <td>${tagBtn}</td>
         <td><div class="fav-comment-inline" contenteditable="true" onblur="saveFavComment(${f.id}, this)">${escHtml(f.comment || '')}</div></td>
@@ -970,14 +1003,21 @@ function renderFavDashboard(favs) {
   const bodegas = new Set(wines.map(w => w.bodega).filter(Boolean));
   const cepas = new Set(wines.map(w => w.cepa).filter(Boolean));
 
-  const elTotal  = document.getElementById('fd-total');
-  const elAvg    = document.getElementById('fd-avg');
+  const totalGasto   = favs.reduce((s, f) => s + (f.wine.precio || 0) * (f.wine.min_unidades || 1), 0);
+  const totalUnidades = favs.reduce((s, f) => s + (f.wine.min_unidades || 1), 0);
+
+  const elTotal   = document.getElementById('fd-total');
+  const elAvg     = document.getElementById('fd-avg');
   const elBodegas = document.getElementById('fd-bodegas');
-  const elCepas  = document.getElementById('fd-cepas');
+  const elCepas   = document.getElementById('fd-cepas');
+  const elGasto   = document.getElementById('fd-total-gasto');
+  const elUnits   = document.getElementById('fd-total-units');
   if (elTotal)   elTotal.textContent   = favs.length;
   if (elAvg)     elAvg.textContent     = avgPrice ? '$' + Math.round(avgPrice).toLocaleString('es-AR') : '—';
   if (elBodegas) elBodegas.textContent = bodegas.size;
   if (elCepas)   elCepas.textContent   = cepas.size;
+  if (elGasto)   elGasto.textContent   = totalGasto ? '$' + Math.round(totalGasto).toLocaleString('es-AR') : '—';
+  if (elUnits)   elUnits.textContent   = `${totalUnidades} unidad${totalUnidades !== 1 ? 'es' : ''} en total`;
 
   if (!wines.length) return;
 
