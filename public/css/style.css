@@ -825,7 +825,7 @@ body {
 .fav-table td { padding: 9px 12px; vertical-align: middle; }
 .fav-col-nombre { font-weight: 600; color: var(--text); max-width: 220px; }
 .fav-col-bodega { color: var(--text-muted); max-width: 160px; font-size: 0.83rem; }
-.fav-col-precio { font-weight: 700; color: var(--wine); text-align: right; white-space: nowrap; }
+.fav-col-precio { font-weight: 700; color: var(--wine); text-align: center; white-space: nowrap; }
 .fav-col-min { text-align: center; color: var(--text-muted); font-size: 0.82rem; }
 .fav-col-actions { white-space: nowrap; display: flex; gap: 6px; }
 .btn-fav-action { padding: 6px 9px; border-radius: 7px; border: none; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: opacity 0.15s; }

@@ -945,9 +945,12 @@ function renderFavorites() {
 
   if (favSort) {
     const dir = favSortDir === 'asc' ? 1 : -1;
+    const getDiff = f => (f.wine.market_price != null && f.wine.precio != null && f.wine.market_price > 0)
+      ? Math.round((f.wine.market_price - f.wine.precio) / f.wine.market_price * 100)
+      : null;
     filtered = [...filtered].sort((a, b) => {
-      const va = a.wine[favSort];
-      const vb = b.wine[favSort];
+      const va = favSort === 'market_diff' ? getDiff(a) : a.wine[favSort];
+      const vb = favSort === 'market_diff' ? getDiff(b) : b.wine[favSort];
       if (va == null && vb == null) return 0;
       if (va == null) return 1;
       if (vb == null) return -1;
@@ -965,15 +968,19 @@ function renderFavorites() {
       <th ${s('bodega')}>Bodega ${favSortIcon('bodega')}</th>
       <th ${s('cepa')}>Cepa ${favSortIcon('cepa')}</th>
       <th>Proveedor</th>
-      <th ${s('precio')}>Precio ${favSortIcon('precio')}</th>
-      <th ${s('market_price')}>P. Mercado ${favSortIcon('market_price')}</th>
-      <th ${s('min_unidades')}>Mín. ${favSortIcon('min_unidades')}</th>
+      <th ${s('precio')} style="text-align:center">Precio ${favSortIcon('precio')}</th>
+      <th ${s('market_price')} style="text-align:center">P. Mercado ${favSortIcon('market_price')}</th>
+      <th ${s('market_diff')} style="text-align:center">Vs. Mercado ${favSortIcon('market_diff')}</th>
+      <th ${s('min_unidades')} style="text-align:center">Mín. ${favSortIcon('min_unidades')}</th>
       <th>Etiqueta</th>
       <th>Nota</th>
       <th></th>
     </tr></thead>
     <tbody>${filtered.map(f => {
       const w = f.wine;
+      const mDiff = (w.market_price != null && w.precio != null && w.market_price > 0)
+        ? Math.round((w.market_price - w.precio) / w.market_price * 100)
+        : null;
       const tagBtn = f.tag
         ? `<button class="btn-fav-tag-inline fav-tag-${f.tag}" onclick="cycleFavTag(${f.id})">${tagLabel[f.tag]}</button>`
         : `<button class="btn-fav-tag-inline" onclick="cycleFavTag(${f.id})"><i class="bi bi-tag"></i></button>`;
@@ -984,6 +991,7 @@ function renderFavorites() {
         <td><span class="badge-source badge-${w.source}">${SOURCE_LABELS[w.source] || w.source}</span></td>
         <td class="fav-col-precio">${formatPrice(w.precio)}</td>
         <td class="fav-col-precio">${w.market_price ? formatPrice(w.market_price) : '—'}</td>
+        <td class="td-market-ind">${marketIndicator(mDiff)}</td>
         <td class="fav-col-min">${(w.min_unidades || 1) > 1 ? w.min_unidades : '—'}</td>
         <td>${tagBtn}</td>
         <td><div class="fav-comment-inline" contenteditable="true" onblur="saveFavComment(${f.id}, this)">${escHtml(f.comment || '')}</div></td>
