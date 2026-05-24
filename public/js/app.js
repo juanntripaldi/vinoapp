@@ -819,7 +819,7 @@ function exportPDF() {
 
 /* ─── Favoritos ──────────────────────────────────────────────────────────────── */
 let _favorites = [];
-let favFilter = 'all';
+let favFilters = { tag: 'all', sources: [], search: '', cepa: '' };
 let favSort = null;
 let favSortDir = 'asc';
 
@@ -894,11 +894,58 @@ function saveFavComment(id, el) {
   fetch(`/api/favorites/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ comment }) });
 }
 
-function setFavFilter(filter, btn) {
-  favFilter = filter;
-  document.querySelectorAll('.fav-filter-btn').forEach(b => b.classList.remove('active'));
+function applyFavFilters(favs) {
+  let r = favs;
+  if (favFilters.tag !== 'all') r = r.filter(f => f.tag === favFilters.tag);
+  if (favFilters.sources.length) r = r.filter(f => favFilters.sources.includes(f.wine.source));
+  if (favFilters.cepa) r = r.filter(f => f.wine.cepa === favFilters.cepa);
+  if (favFilters.search) {
+    const q = favFilters.search.toLowerCase();
+    r = r.filter(f => (f.wine.nombre || '').toLowerCase().includes(q) || (f.wine.bodega || '').toLowerCase().includes(q));
+  }
+  return r;
+}
+
+function setFavTagFilter(tag, btn) {
+  favFilters.tag = tag;
+  document.querySelectorAll('.fav-tag-filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderFavorites();
+}
+
+function toggleFavSource(source, btn) {
+  const idx = favFilters.sources.indexOf(source);
+  if (idx >= 0) favFilters.sources.splice(idx, 1);
+  else favFilters.sources.push(source);
+  btn.classList.toggle('active', favFilters.sources.includes(source));
+  renderFavorites();
+}
+
+function setFavSearch() {
+  favFilters.search = document.getElementById('fav-f-search')?.value || '';
+  renderFavorites();
+}
+
+function setFavCepa() {
+  favFilters.cepa = document.getElementById('fav-f-cepa')?.value || '';
+  renderFavorites();
+}
+
+function clearFavFilters() {
+  favFilters = { tag: 'all', sources: [], search: '', cepa: '' };
+  const s = document.getElementById('fav-f-search'); if (s) s.value = '';
+  const c = document.getElementById('fav-f-cepa');  if (c) c.value = '';
+  document.querySelectorAll('.fav-tag-filter-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  document.querySelectorAll('.fav-source-btn').forEach(b => b.classList.remove('active'));
+  renderFavorites();
+}
+
+function populateFavCepaSelect() {
+  const sel = document.getElementById('fav-f-cepa');
+  if (!sel) return;
+  const cepas = [...new Set(_favorites.map(f => f.wine.cepa).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Todas las cepas</option>' +
+    cepas.map(c => `<option value="${escHtml(c)}"${favFilters.cepa === c ? ' selected' : ''}>${escHtml(c)}</option>`).join('');
 }
 
 function setFavSort(col) {
@@ -923,13 +970,17 @@ function addToQuoteFromFav(favId) {
 
 function renderFavorites() {
   const favs = _favorites;
-  let filtered = favFilter === 'all' ? favs : favs.filter(f => f.tag === favFilter);
+  populateFavCepaSelect();
+  let filtered = applyFavFilters(favs);
+  const isFiltered = filtered.length !== favs.length;
   const countEl = document.getElementById('fav-count');
-  if (countEl) countEl.textContent = `${favs.length} vino${favs.length !== 1 ? 's' : ''}`;
+  if (countEl) countEl.textContent = isFiltered
+    ? `${filtered.length} de ${favs.length} vino${favs.length !== 1 ? 's' : ''}`
+    : `${favs.length} vino${favs.length !== 1 ? 's' : ''}`;
 
   const dashboard = document.getElementById('fav-dashboard');
   if (dashboard) dashboard.style.display = favs.length ? '' : 'none';
-  renderFavDashboard(favs);
+  renderFavDashboard(filtered, favs);
 
   const list = document.getElementById('favoritos-list');
   if (!list) return;
@@ -1004,15 +1055,16 @@ function renderFavorites() {
   </table></div>`;
 }
 
-function renderFavDashboard(favs) {
+function renderFavDashboard(favs, allFavs) {
   const wines = favs.map(f => f.wine);
   const withPrice = wines.filter(w => w.precio > 0);
   const avgPrice = withPrice.length ? withPrice.reduce((s, w) => s + w.precio, 0) / withPrice.length : 0;
   const bodegas = new Set(wines.map(w => w.bodega).filter(Boolean));
   const cepas = new Set(wines.map(w => w.cepa).filter(Boolean));
 
-  const totalGasto   = favs.reduce((s, f) => s + (f.wine.precio || 0) * (f.wine.min_unidades || 1), 0);
+  const totalGasto    = favs.reduce((s, f) => s + (f.wine.precio || 0) * (f.wine.min_unidades || 1), 0);
   const totalUnidades = favs.reduce((s, f) => s + (f.wine.min_unidades || 1), 0);
+  const isFiltered    = allFavs && favs.length !== allFavs.length;
 
   const elTotal   = document.getElementById('fd-total');
   const elAvg     = document.getElementById('fd-avg');
@@ -1020,7 +1072,7 @@ function renderFavDashboard(favs) {
   const elCepas   = document.getElementById('fd-cepas');
   const elGasto   = document.getElementById('fd-total-gasto');
   const elUnits   = document.getElementById('fd-total-units');
-  if (elTotal)   elTotal.textContent   = favs.length;
+  if (elTotal)   elTotal.textContent   = isFiltered ? `${favs.length}/${allFavs.length}` : favs.length;
   if (elAvg)     elAvg.textContent     = avgPrice ? '$' + Math.round(avgPrice).toLocaleString('es-AR') : '—';
   if (elBodegas) elBodegas.textContent = bodegas.size;
   if (elCepas)   elCepas.textContent   = cepas.size;
