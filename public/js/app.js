@@ -706,18 +706,6 @@ function renderDashboard(s) {
     datasets: [{ label: 'Cantidad', data: cepasData.map(r => r.cantidad), backgroundColor: '#7B1C2E' }],
   }, { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } });
 
-  const preciosCepa = s.precio_por_cepa || [];
-  renderChart('chart-precio-cepa', 'bar', {
-    labels: preciosCepa.map(r => r.cepa),
-    datasets: [{ label: 'Precio promedio', data: preciosCepa.map(r => r.avg_precio), backgroundColor: colors.map((c, i) => colors[i % colors.length]) }],
-  }, { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { callback: v => '$' + (v / 1000).toFixed(0) + 'k' } } } });
-
-  const bodegasData = s.por_bodega || [];
-  renderChart('chart-bodegas', 'bar', {
-    labels: bodegasData.map(r => r.bodega),
-    datasets: [{ label: 'Vinos', data: bodegasData.map(r => r.cantidad), backgroundColor: '#C9A870' }],
-  }, { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } });
-
   const provinciasData = (s.por_provincia || []).filter(r => r.provincia);
   renderChart('chart-provincias', 'doughnut', {
     labels: provinciasData.map(r => r.provincia),
