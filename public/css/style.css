@@ -966,3 +966,223 @@ body {
 .ind-yellow { background: #FEF3C7; color: #92400E; }
 .ind-green  { background: #DCFCE7; color: #166534; }
 .ind-blue   { background: #DBEAFE; color: #1E40AF; }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   CRM — Clientes + Pedidos
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Estado badges */
+.estado-badge { display:inline-block;padding:2px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;letter-spacing:0.3px; }
+.estado-borrador   { background:#FEF9C3;color:#A16207; }
+.estado-confirmado { background:#DCFCE7;color:#166534; }
+.estado-entregado  { background:#DBEAFE;color:#1E40AF; }
+.estado-cancelado  { background:#FEE2E2;color:#9B1C1C; }
+
+/* ─── Vista Clientes ─────────────────────────────────────────────────────────── */
+.clientes-wrap { padding:0 24px 24px; }
+.clientes-toolbar { display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap; }
+.clientes-search { flex:1;min-width:200px;padding:9px 14px;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;background:var(--bg-card); }
+.clientes-search:focus { outline:none;border-color:var(--wine); }
+.btn-new-client { background:var(--wine);color:white;border:none;border-radius:8px;padding:9px 16px;font-size:0.88rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap; }
+.btn-new-client:hover { background:var(--wine-light); }
+
+.client-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px; }
+.client-card { background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:box-shadow 0.15s,border-color 0.15s; }
+.client-card:hover { box-shadow:0 4px 16px rgba(123,28,46,0.1);border-color:var(--wine-light); }
+
+.client-card-header { display:flex;align-items:center;gap:10px;margin-bottom:10px; }
+.client-avatar { width:40px;height:40px;border-radius:50%;background:var(--wine);color:white;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;flex-shrink:0; }
+.client-card-info-name { flex:1;min-width:0; }
+.client-name { font-weight:600;font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.client-code { font-size:0.78rem;color:var(--text-muted); }
+.client-card-actions { display:flex;gap:4px;flex-shrink:0; }
+.btn-card-action { background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px 6px;border-radius:6px;font-size:0.85rem;transition:background 0.15s,color 0.15s; }
+.btn-card-action:hover { background:var(--bg);color:var(--text); }
+.btn-card-del:hover { color:var(--wine); }
+.client-card-contact { display:flex;flex-direction:column;gap:3px;font-size:0.82rem;color:var(--text-muted);margin-bottom:10px; }
+.client-card-contact span i { margin-right:5px; }
+.client-card-stats { font-size:0.82rem;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap; }
+.ccs-sep { color:var(--text-muted); }
+.client-card-notes { margin-top:8px;font-size:0.8rem;color:var(--text-muted);font-style:italic;background:var(--bg);padding:6px 10px;border-radius:6px; }
+
+/* CRM empty state */
+.crm-empty { text-align:center;padding:60px 20px;color:var(--text-muted); }
+.crm-empty i { font-size:3rem;color:var(--gold);display:block;margin-bottom:12px; }
+.crm-empty p { font-size:0.9rem; }
+
+/* ─── Panel Detalle Cliente ──────────────────────────────────────────────────── */
+.panel-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:199;display:none; }
+.panel-overlay.open { display:block; }
+.panel-cliente { position:fixed;top:0;right:-100%;width:min(480px,100vw);height:100vh;background:var(--bg-card);box-shadow:-4px 0 32px rgba(0,0,0,0.15);z-index:200;transition:right 0.28s ease;overflow-y:auto;display:flex;flex-direction:column; }
+.panel-cliente.open { right:0; }
+.panel-close { position:sticky;top:0;background:var(--bg-card);padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;z-index:1; }
+.btn-panel-back { background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.1rem;padding:4px; }
+.btn-panel-back:hover { color:var(--wine); }
+.panel-cliente-content { padding:20px;flex:1; }
+
+.panel-client-header { display:flex;align-items:flex-start;gap:12px;margin-bottom:16px; }
+.panel-avatar { width:52px;height:52px;border-radius:50%;background:var(--wine);color:white;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;flex-shrink:0; }
+.panel-client-meta { flex:1; }
+.panel-client-name { font-size:1.1rem;font-weight:700; }
+.panel-client-code { font-size:0.82rem;color:var(--text-muted); }
+.panel-client-actions { display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0; }
+.btn-panel-edit { background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:5px 10px;font-size:0.82rem;cursor:pointer;color:var(--text); }
+.btn-panel-edit:hover { border-color:var(--wine);color:var(--wine); }
+.btn-panel-order { background:var(--wine);color:white;border:none;border-radius:7px;padding:5px 10px;font-size:0.82rem;cursor:pointer;font-weight:600; }
+.btn-panel-order:hover { background:var(--wine-light); }
+.panel-client-info { font-size:0.85rem;color:var(--text-muted);display:flex;flex-direction:column;gap:5px;margin-bottom:16px; }
+.panel-client-info div i { margin-right:6px; }
+.panel-notes { background:var(--bg);padding:8px 10px;border-radius:6px;font-style:italic; }
+.panel-stats-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px; }
+.panel-stat { background:var(--bg);border-radius:10px;padding:12px;text-align:center; }
+.ps-value { font-size:1.1rem;font-weight:700;color:var(--wine); }
+.ps-label { font-size:0.75rem;color:var(--text-muted);margin-top:2px; }
+.panel-section-title { font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin:16px 0 8px; }
+.panel-cepas { display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px; }
+.panel-cepa-chip { background:#F3E8FF;color:#6B21A8;padding:3px 10px;border-radius:20px;font-size:0.78rem; }
+.panel-order-row { display:flex;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:background 0.15s; }
+.panel-order-row:hover { background:var(--bg); }
+.por-left { display:flex;align-items:center;gap:8px; }
+.por-num { font-weight:700;color:var(--wine);font-size:0.85rem; }
+.por-date { font-size:0.82rem;color:var(--text-muted); }
+.por-right { margin-left:auto;display:flex;align-items:center;gap:10px;font-size:0.85rem; }
+.por-total { font-weight:600; }
+.por-items { color:var(--text-muted); }
+.panel-no-orders { color:var(--text-muted);font-size:0.88rem;text-align:center;padding:20px; }
+
+/* ─── Vista Pedidos ──────────────────────────────────────────────────────────── */
+.pedidos-wrap { padding:0 24px 24px; }
+.pedidos-toolbar { display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap; }
+.btn-new-order { background:var(--wine);color:white;border:none;border-radius:8px;padding:9px 16px;font-size:0.88rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap; }
+.btn-new-order:hover { background:var(--wine-light); }
+.filter-order-input { padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:var(--bg-card);color:var(--text); }
+.filter-order-input:focus { outline:none;border-color:var(--wine); }
+
+.active-pedido-banner { background:linear-gradient(135deg,var(--wine-dark),var(--wine));color:white;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px; }
+.apb-info { display:flex;align-items:center;gap:10px;flex:1;font-size:0.9rem; }
+.apb-info i { font-size:1.2rem;color:var(--gold); }
+.apb-actions { display:flex;align-items:center;gap:8px; }
+.btn-apb-edit { background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.3);border-radius:7px;padding:6px 12px;font-size:0.85rem;cursor:pointer;font-weight:600; }
+.btn-apb-edit:hover { background:rgba(255,255,255,0.3); }
+.btn-apb-clear { background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:1rem;padding:4px; }
+.btn-apb-clear:hover { color:white; }
+
+.orders-table-wrap { background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden; }
+.orders-table { width:100%;border-collapse:collapse;font-size:0.88rem; }
+.orders-table thead th { background:var(--bg);padding:11px 14px;text-align:left;font-weight:600;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);border-bottom:1px solid var(--border); }
+.orders-table tbody tr { border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.12s; }
+.orders-table tbody tr:last-child { border-bottom:none; }
+.orders-table tbody tr:hover { background:var(--bg); }
+.td-num { font-weight:700;color:var(--wine);padding:12px 14px; }
+.td-fecha,.td-cliente,.td-items,.td-total { padding:12px 14px; }
+.td-items { color:var(--text-muted);font-size:0.82rem; }
+.td-total { font-weight:600; }
+.td-order-actions { text-align:right;white-space:nowrap;padding:12px 14px; }
+.btn-order-action { background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px 7px;border-radius:6px;font-size:0.85rem; }
+.btn-order-action:hover { background:var(--bg);color:var(--text); }
+.btn-order-del:hover { color:var(--wine); }
+.orders-empty { text-align:center;padding:50px 20px;color:var(--text-muted); }
+
+/* ─── Modales ────────────────────────────────────────────────────────────────── */
+.modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;display:none;align-items:center;justify-content:center;padding:16px; }
+.modal-box { background:var(--bg-card);border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,0.2);width:100%;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column; }
+.modal-cliente-box { max-width:480px; }
+.modal-pedido-box  { max-width:700px; }
+.modal-import-box  { max-width:580px; }
+.modal-header { display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-card);z-index:1; }
+.modal-header span { font-size:1.05rem;font-weight:700;color:var(--wine); }
+.modal-close { background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.4rem;line-height:1;padding:2px 6px;border-radius:6px; }
+.modal-close:hover { color:var(--wine);background:var(--bg); }
+.modal-body { padding:20px;flex:1; }
+.modal-footer { padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--bg-card); }
+.btn-modal-cancel { background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 16px;font-size:0.88rem;cursor:pointer;color:var(--text); }
+.btn-modal-cancel:hover { border-color:var(--wine); }
+.btn-modal-save { background:var(--wine);color:white;border:none;border-radius:8px;padding:9px 18px;font-size:0.88rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px; }
+.btn-modal-save:hover { background:var(--wine-light); }
+
+/* Campos de formulario */
+.form-row-2 { display:grid;grid-template-columns:1fr 1fr;gap:14px; }
+.form-field { display:flex;flex-direction:column;gap:5px;margin-bottom:14px; }
+.form-field label { font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted); }
+.form-field input,.form-field textarea,.form-field select { padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;background:var(--bg-card);color:var(--text);font-family:inherit; }
+.form-field input:focus,.form-field textarea:focus,.form-field select:focus { outline:none;border-color:var(--wine); }
+.form-field textarea { resize:vertical;min-height:70px; }
+
+/* Pedido modal — campos */
+.pedido-form-row { display:grid;grid-template-columns:1fr auto auto;gap:14px;margin-bottom:14px;align-items:end; }
+.pedido-field { display:flex;flex-direction:column;gap:5px; }
+.pedido-field label { font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted); }
+.pedido-field input,.pedido-field select { padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;background:var(--bg-card);color:var(--text);width:100%; }
+.pedido-field input:focus,.pedido-field select:focus { outline:none;border-color:var(--wine); }
+
+/* Selector de cliente en modal */
+.pedido-client-dropdown { position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);z-index:10;max-height:200px;overflow-y:auto; }
+.pcd-item { padding:9px 12px;cursor:pointer;font-size:0.88rem;transition:background 0.1s;display:flex;align-items:center;gap:8px; }
+.pcd-item:hover { background:var(--bg); }
+.pcd-code { font-size:0.78rem;color:var(--text-muted); }
+.pcd-new { color:var(--wine);font-weight:600;border-top:1px solid var(--border); }
+.client-chip { display:flex;align-items:center;gap:8px;background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:7px 12px;font-size:0.9rem; }
+.chip-remove { background:none;border:none;cursor:pointer;color:#92400E;font-size:1.2rem;line-height:1;padding:0 2px; }
+
+/* Búsqueda de vinos en modal pedido */
+.pedido-wine-section { margin-bottom:14px; }
+.pedido-wine-section label { font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);display:block;margin-bottom:6px; }
+.pedido-wine-q { width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;background:var(--bg-card);color:var(--text); }
+.pedido-wine-q:focus { outline:none;border-color:var(--wine); }
+.pedido-wine-results { border:1px solid var(--border);border-radius:8px;background:var(--bg-card);max-height:200px;overflow-y:auto;margin-top:4px; }
+.pedido-wine-results:empty { display:none; }
+.pwr-item { display:flex;align-items:center;justify-content:space-between;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:0.85rem;transition:background 0.1s;gap:10px; }
+.pwr-item:last-child { border-bottom:none; }
+.pwr-item:hover { background:var(--bg); }
+.pwr-name { font-weight:600; }
+.pwr-sub { font-size:0.78rem;color:var(--text-muted); }
+.pwr-price { font-weight:700;color:var(--wine);white-space:nowrap;flex-shrink:0; }
+.pwr-empty { padding:12px;text-align:center;color:var(--text-muted);font-size:0.85rem; }
+
+/* Ítems del pedido */
+.pedido-items-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:0.88rem;font-weight:600; }
+.pedido-items-empty { text-align:center;padding:20px;color:var(--text-muted);font-size:0.85rem;border:1px dashed var(--border);border-radius:8px; }
+.pedido-item-row { display:grid;grid-template-columns:1fr auto auto auto auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:0.85rem; }
+.pir-name { font-weight:600; }
+.pir-sub { font-size:0.78rem;color:var(--text-muted); }
+.pir-controls { display:flex;align-items:center;gap:6px; }
+.pir-btn { background:var(--bg);border:1px solid var(--border);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;line-height:1; }
+.pir-btn:hover { background:var(--wine);color:white;border-color:var(--wine); }
+.pir-qty { min-width:24px;text-align:center;font-weight:600; }
+.pir-price { color:var(--text-muted);white-space:nowrap; }
+.pir-subtotal { font-weight:700;color:var(--wine);white-space:nowrap; }
+.pir-del { background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1rem;padding:3px;border-radius:4px; }
+.pir-del:hover { color:var(--wine);background:var(--bg); }
+.pedido-total-row { display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:10px 12px;background:var(--bg);border-radius:8px;margin-top:8px;font-size:0.95rem; }
+.pedido-total-label { color:var(--text-muted); }
+.pedido-total-val { font-weight:700;font-size:1.1rem;color:var(--wine); }
+
+/* Import modal */
+.import-instructions { font-size:0.88rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6; }
+.import-instructions code { background:var(--bg);padding:1px 5px;border-radius:4px;font-size:0.82rem; }
+.btn-download-template { background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:0.85rem;cursor:pointer;color:var(--text);display:inline-flex;align-items:center;gap:6px;margin-bottom:14px; }
+.btn-download-template:hover { border-color:var(--wine);color:var(--wine); }
+.import-file-wrap { margin-bottom:16px; }
+.import-file-input { display:block;width:100%;padding:12px;border:2px dashed var(--border);border-radius:8px;font-size:0.88rem;cursor:pointer; }
+.import-file-input:hover { border-color:var(--wine); }
+.import-preview-wrap { overflow-x:auto;margin-top:10px; }
+.import-preview-table { width:100%;border-collapse:collapse;font-size:0.85rem; }
+.import-preview-table th { background:var(--bg);padding:8px 12px;text-align:left;font-size:0.78rem;text-transform:uppercase;border-bottom:1px solid var(--border); }
+.import-preview-table td { padding:8px 12px;border-bottom:1px solid var(--border); }
+
+/* Botón "agregar a pedido" en fila de vino */
+.btn-order-add { }
+.btn-order-add.has-item { color:var(--wine); }
+
+/* ─── Responsive CRM ─────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .client-grid { grid-template-columns:1fr; }
+  .form-row-2 { grid-template-columns:1fr; }
+  .pedido-form-row { grid-template-columns:1fr; }
+  .pedido-item-row { grid-template-columns:1fr auto; }
+  .pir-price { display:none; }
+  .orders-table .td-items { display:none; }
+  .pedidos-toolbar { gap:8px; }
+  .filter-order-input { width:100%; }
+}
+.ind-blue   { background: #DBEAFE; color: #1E40AF; }

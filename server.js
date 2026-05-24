@@ -221,6 +221,74 @@ app.delete('/api/quotes/:id', async (req, res) => {
   }
 });
 
+// ─── API: Clientes ────────────────────────────────────────────────────────────
+app.get('/api/clients', (_req, res) => {
+  res.json(db.getClients());
+});
+
+app.post('/api/clients', async (req, res) => {
+  try {
+    const client = await db.addClient(req.body);
+    res.json(client);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/clients/:id', async (req, res) => {
+  try {
+    await db.updateClientById(parseInt(req.params.id), req.body);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/clients/:id', async (req, res) => {
+  try {
+    await db.deleteClientById(parseInt(req.params.id));
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── API: Pedidos ─────────────────────────────────────────────────────────────
+app.get('/api/orders', (req, res) => {
+  try {
+    res.json(db.getOrders(req.query));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/orders', async (req, res) => {
+  try {
+    const order = await db.addOrder(req.body);
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/orders/:id', async (req, res) => {
+  try {
+    await db.updateOrderById(parseInt(req.params.id), req.body);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/orders/:id', async (req, res) => {
+  try {
+    await db.deleteOrderById(parseInt(req.params.id));
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── API: Estado de las fuentes ───────────────────────────────────────────────
 app.get('/api/status', (req, res) => {
   try {

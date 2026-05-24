@@ -47,6 +47,12 @@
     <a href="#" class="nav-item" data-view="consultor">
       <i class="bi bi-robot"></i> Consultor IA
     </a>
+    <a href="#" class="nav-item" data-view="clientes">
+      <i class="bi bi-people"></i> Clientes
+    </a>
+    <a href="#" class="nav-item" data-view="pedidos">
+      <i class="bi bi-clipboard-check"></i> Pedidos <span class="nav-badge" id="pedido-badge"></span>
+    </a>
   </nav>
   <div class="sidebar-update">
     <button class="btn-update-all" id="btn-update-all" onclick="updateAll()">
@@ -389,6 +395,60 @@
     </div>
   </div>
 
+  <!-- ═══ Vista: Clientes ═════════════════════════════════════════════════════ -->
+  <div id="view-clientes" class="view">
+    <div class="page-header">
+      <span class="page-title"><i class="bi bi-people"></i> Clientes</span>
+      <span class="results-count" id="clientes-count"></span>
+    </div>
+    <div class="clientes-wrap">
+      <div class="clientes-toolbar">
+        <input type="text" class="clientes-search" id="clientes-search" placeholder="🔍 Buscar por nombre, código o teléfono..." oninput="_clienteSearch=this.value;renderClientes()">
+        <button class="btn-new-client" onclick="openClienteModal()"><i class="bi bi-plus-lg"></i> Nuevo Cliente</button>
+      </div>
+      <div class="client-grid" id="clientes-grid">
+        <div class="crm-empty"><i class="bi bi-people"></i><p>Cargando clientes...</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Vista: Pedidos ════════════════════════════════════════════════════════ -->
+  <div id="view-pedidos" class="view">
+    <div class="page-header">
+      <span class="page-title"><i class="bi bi-clipboard-check"></i> Pedidos</span>
+      <span class="results-count" id="orders-count"></span>
+    </div>
+    <div class="pedidos-wrap">
+      <div id="active-pedido-banner" style="display:none"></div>
+      <div class="pedidos-toolbar">
+        <button class="btn-new-order" onclick="openPedidoModal()"><i class="bi bi-plus-lg"></i> Nuevo pedido</button>
+        <input type="text" class="filter-order-input" id="filter-order-cliente" placeholder="Filtrar por cliente..." oninput="renderOrdersList()">
+        <select class="filter-order-input" id="filter-order-estado" onchange="renderOrdersList()">
+          <option value="">Todos los estados</option>
+          <option value="borrador">Borrador</option>
+          <option value="confirmado">Confirmado</option>
+          <option value="entregado">Entregado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+        <input type="date" class="filter-order-input" id="filter-order-desde" onchange="renderOrdersList()" title="Desde">
+        <input type="date" class="filter-order-input" id="filter-order-hasta" onchange="renderOrdersList()" title="Hasta">
+        <button class="btn-new-order" style="background:var(--gold);color:var(--wine-dark)" onclick="openImportModal()"><i class="bi bi-upload"></i> Importar</button>
+      </div>
+      <div class="orders-table-wrap">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Fecha</th><th>Cliente</th><th>Estado</th><th>Ítems</th><th>Total</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody">
+            <tr><td colspan="7" class="orders-empty">Cargando pedidos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <!-- ─── Mobile Nav ────────────────────────────────────────────────────────────── -->
@@ -400,10 +460,152 @@
   <a href="#" data-view="cotizador"><i class="bi bi-cart3"></i><span>Pedido</span></a>
   <a href="#" data-view="dashboard"><i class="bi bi-bar-chart-line"></i><span>Stats</span></a>
   <a href="#" data-view="consultor"><i class="bi bi-robot"></i><span>IA</span></a>
+  <a href="#" data-view="clientes"><i class="bi bi-people"></i><span>CRM</span></a>
+  <a href="#" data-view="pedidos"><i class="bi bi-clipboard-check"></i><span>Pedidos</span></a>
 </nav>
 
 <!-- ─── Toast container ───────────────────────────────────────────────────────── -->
 <div class="toast-container" id="toast-container"></div>
+
+<!-- ─── Panel overlay ─────────────────────────────────────────────────────────── -->
+<div class="panel-overlay" id="panel-overlay" onclick="closeClientDetail()"></div>
+
+<!-- ─── Panel: Detalle Cliente ───────────────────────────────────────────────── -->
+<div class="panel-cliente" id="panel-cliente">
+  <div class="panel-close">
+    <button class="btn-panel-back" onclick="closeClientDetail()"><i class="bi bi-x-lg"></i></button>
+    <span style="font-weight:600;font-size:0.95rem">Detalle del cliente</span>
+  </div>
+  <div id="panel-cliente-content" class="panel-cliente-content"></div>
+</div>
+
+<!-- ─── Modal: Cliente ────────────────────────────────────────────────────────── -->
+<div id="modal-cliente" class="modal-overlay" style="display:none">
+  <div class="modal-box modal-cliente-box">
+    <div class="modal-header">
+      <span id="modal-cliente-title">Nuevo Cliente</span>
+      <button class="modal-close" onclick="closeClienteModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row-2">
+        <div class="form-field">
+          <label>Nombre *</label>
+          <input id="cl-nombre" type="text" placeholder="Nombre o razón social">
+        </div>
+        <div class="form-field">
+          <label>Código</label>
+          <input id="cl-codigo" type="text" placeholder="CLI001 (auto si vacío)">
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-field">
+          <label>Teléfono</label>
+          <input id="cl-telefono" type="tel" placeholder="11-1234-5678">
+        </div>
+        <div class="form-field">
+          <label>Email</label>
+          <input id="cl-email" type="email" placeholder="cliente@email.com">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Dirección</label>
+        <input id="cl-direccion" type="text" placeholder="Calle 123, Ciudad">
+      </div>
+      <div class="form-field">
+        <label>Notas / Perfil</label>
+        <textarea id="cl-notas" rows="3" placeholder="Gustos, preferencias, restricciones..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeClienteModal()">Cancelar</button>
+      <button class="btn-modal-save" onclick="saveClienteModal()"><i class="bi bi-person-check"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Modal: Pedido ─────────────────────────────────────────────────────────── -->
+<div id="modal-pedido" class="modal-overlay" style="display:none">
+  <div class="modal-box modal-pedido-box">
+    <div class="modal-header">
+      <span id="modal-pedido-title">Nuevo Pedido</span>
+      <button class="modal-close" onclick="closePedidoModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="pedido-form-row">
+        <div class="pedido-field">
+          <label>Cliente</label>
+          <div style="position:relative">
+            <input id="pedido-cliente-search" type="text" placeholder="Buscar o escribir cliente..." oninput="pedidoClientSearch(this.value)" autocomplete="off">
+            <div id="pedido-client-chip" class="client-chip" style="display:none"></div>
+            <div id="pedido-client-dropdown" class="pedido-client-dropdown"></div>
+          </div>
+        </div>
+        <div class="pedido-field" style="min-width:150px">
+          <label>Fecha</label>
+          <input id="pedido-fecha" type="date">
+        </div>
+        <div class="pedido-field" style="min-width:150px">
+          <label>Estado</label>
+          <select id="pedido-estado">
+            <option value="borrador">Borrador</option>
+            <option value="confirmado" selected>Confirmado</option>
+            <option value="entregado">Entregado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+      <div class="pedido-field" style="margin-bottom:16px">
+        <label>Notas</label>
+        <input id="pedido-notas" type="text" placeholder="Notas del pedido...">
+      </div>
+      <div class="pedido-wine-section">
+        <label>Agregar vinos</label>
+        <input id="pedido-wine-q" class="pedido-wine-q" type="text" placeholder="Buscar vino por nombre, bodega, cepa..." oninput="pedidoWineSearch(this.value)" autocomplete="off">
+        <div id="pedido-wine-results" class="pedido-wine-results"></div>
+      </div>
+      <div class="pedido-items-header">
+        <span>Ítems del pedido</span>
+        <span id="pedido-items-count" style="color:var(--text-muted);font-size:0.85rem"></span>
+      </div>
+      <div id="pedido-modal-items"></div>
+      <div id="pedido-modal-total" class="pedido-total-row"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closePedidoModal()">Cancelar</button>
+      <button class="btn-modal-save" onclick="savePedidoModal()"><i class="bi bi-floppy"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Modal: Importar ───────────────────────────────────────────────────────── -->
+<div id="modal-import" class="modal-overlay" style="display:none">
+  <div class="modal-box modal-import-box">
+    <div class="modal-header">
+      <span>Importar Pedidos Históricos</span>
+      <button class="modal-close" onclick="closeImportModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="import-instructions">
+        Subí un archivo <strong>Excel (.xlsx)</strong> o <strong>CSV</strong> con tus pedidos históricos.<br>
+        Columnas requeridas: <code>fecha</code>, <code>nombre_vino</code>, <code>precio_unitario</code>, <code>cantidad</code>.<br>
+        Opcionales: <code>codigo_cliente</code>, <code>nombre_cliente</code>, <code>bodega</code>, <code>cepa</code>, <code>proveedor</code>, <code>notas_pedido</code>.
+      </p>
+      <button class="btn-download-template" onclick="downloadImportTemplate()">
+        <i class="bi bi-download"></i> Descargar plantilla de ejemplo
+      </button>
+      <div class="import-file-wrap">
+        <input type="file" id="import-file" class="import-file-input" accept=".xlsx,.xls,.csv" onchange="handleImportFile(this)">
+      </div>
+      <div id="import-preview"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeImportModal()">Cancelar</button>
+      <button id="btn-import-confirm" class="btn-modal-save" style="display:none" onclick="confirmImport()">
+        <i class="bi bi-cloud-upload"></i> Confirmar importación
+      </button>
+    </div>
+  </div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -411,5 +613,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="/js/app.js"></script>
+<script src="/js/crm.js"></script>
 </body>
 </html>

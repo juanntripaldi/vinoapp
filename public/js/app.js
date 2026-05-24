@@ -180,6 +180,8 @@ function showView(view) {
   if (view === 'vistas') loadViews().then(() => renderSavedViews());
   if (view === 'favoritos') loadFavorites().then(() => renderFavorites());
   if (view === 'cotizador') { loadQuotes().then(() => renderSavedQuotes()); renderCotizador(); document.getElementById('q-cliente').value = activeQuote.cliente; document.getElementById('q-notas').value = activeQuote.notas; }
+  if (view === 'clientes') renderClientes();
+  if (view === 'pedidos')  renderPedidos();
 }
 
 /* ─── Toast notifications ────────────────────────────────────────────────────── */
@@ -345,6 +347,7 @@ function renderWines(wines) {
       <td class="td-actions col-actions">
         <button class="btn-row-action btn-star${starred ? ' active' : ''}" data-idx="${i}" onclick="handleStarClick(this)" title="${starred ? 'Quitar de favoritos' : 'Agregar a favoritos'}">${starred ? '★' : '☆'}</button>
         <button class="btn-row-action btn-cart" data-idx="${i}" onclick="handleCartClick(this)" title="Agregar a cotización"><i class="bi bi-cart-plus"></i></button>
+        <button class="btn-row-action btn-order-add" data-idx="${i}" onclick="handleOrderAddClick(this)" title="Agregar a pedido activo"><i class="bi bi-clipboard-plus"></i></button>
       </td>
     </tr>`;
   }).join('');
@@ -872,6 +875,11 @@ async function handleStarClick(btn) {
 function handleCartClick(btn) {
   const w = currentWines[parseInt(btn.dataset.idx)];
   if (w) addToQuote(w);
+}
+
+function handleOrderAddClick(btn) {
+  const w = currentWines[parseInt(btn.dataset.idx)];
+  if (w) addToPedido(w);
 }
 
 async function toggleFavorite(w) {
@@ -1453,7 +1461,7 @@ async function init() {
     saveMarketPrice(input);
   });
 
-  await Promise.all([loadWines(), loadStatus(), loadFilterOptions(), loadFavorites(), loadViews(), loadQuotes()]);
+  await Promise.all([loadWines(), loadStatus(), loadFilterOptions(), loadFavorites(), loadViews(), loadQuotes(), loadClients(), loadOrders()]);
   await migrateFromLocalStorage();
 }
 

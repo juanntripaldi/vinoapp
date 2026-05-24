@@ -21,6 +21,9 @@ let marketPrices = {};
 let favorites = [];
 let views = [];
 let quotes = [];
+let clients = [];
+let orders = [];
+let _nextOrderNum = 1;
 
 // ─── Conexión y carga inicial ─────────────────────────────────────────────────
 
@@ -51,6 +54,13 @@ async function init() {
 
   const quoteDocs = await _db.collection('quotes').find({}).sort({ savedAt: -1 }).toArray();
   quotes = quoteDocs.map(({ _id, ...rest }) => ({ id: _id, ...rest })).slice(0, 50);
+
+  const clientDocs = await _db.collection('clients').find({}).sort({ nombre: 1 }).toArray();
+  clients = clientDocs.map(({ _id, ...rest }) => ({ id: _id, ...rest }));
+
+  const orderDocs = await _db.collection('orders').find({}).sort({ fecha: -1, _id: -1 }).toArray();
+  orders = orderDocs.map(({ _id, ...rest }) => ({ id: _id, ...rest }));
+  _nextOrderNum = orders.length > 0 ? Math.max(...orders.map(o => o.numero || 0)) + 1 : 1;
 }
 
 // ─── Persistencia ─────────────────────────────────────────────────────────────
@@ -384,9 +394,98 @@ async function removeQuote(id) {
   quotes = quotes.filter(q => q.id !== id);
 }
 
+// ─── Clientes ─────────────────────────────────────────────────────────────────
+
+function getClients() { return clients; }
+
+async function addClient(data) {
+  const id = Date.now();
+  const now = new Date().toISOString();
+  const codigo = (data.codigo && data.codigo.trim()) || `CLI${String(clients.length + 1).padStart(3, '0')}`;
+  const doc = {
+    _id: id, codigo, nombre: data.nombre,
+    telefono: data.telefono || null, email: data.email || null,
+    direccion: data.direccion || null, notas: data.notas || null,
+    created_at: now,
+  };
+  await _db.collection('clients').insertOne(doc);
+  const newClient = { id, ...doc };
+  delete newClient._id;
+  clients.push(newClient);
+  clients.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es'));
+  return newClient;
+}
+
+async function updateClientById(id, fields) {
+  const allowed = ['codigo', 'nombre', 'telefono', 'email', 'direccion', 'notas'];
+  const update = {};
+  for (const k of allowed) if (k in fields) update[k] = fields[k];
+  await _db.collection('clients').updateOne({ _id: id }, { $set: update });
+  const c = clients.find(c => c.id === id);
+  if (c) Object.assign(c, update);
+}
+
+async function deleteClientById(id) {
+  await _db.collection('clients').deleteOne({ _id: id });
+  clients = clients.filter(c => c.id !== id);
+}
+
+// ─── Pedidos ──────────────────────────────────────────────────────────────────
+
+function getOrders({ cliente_id, estado, fecha_from, fecha_to } = {}) {
+  let result = [...orders];
+  if (cliente_id) result = result.filter(o => o.cliente_id === parseInt(cliente_id));
+  if (estado)     result = result.filter(o => o.estado === estado);
+  if (fecha_from) result = result.filter(o => o.fecha >= fecha_from);
+  if (fecha_to)   result = result.filter(o => o.fecha <= fecha_to);
+  return result;
+}
+
+async function addOrder(data) {
+  const id = Date.now();
+  const now = new Date().toISOString();
+  const numero = _nextOrderNum++;
+  const items = data.items || [];
+  const total = items.reduce((s, i) => s + ((i.precio_unitario || 0) * (i.cantidad || 0)), 0);
+  const doc = {
+    _id: id, numero,
+    cliente_id: data.cliente_id || null,
+    cliente_nombre: data.cliente_nombre || null,
+    fecha: data.fecha || now.split('T')[0],
+    estado: data.estado || 'borrador',
+    items, total,
+    notas: data.notas || null,
+    created_at: now,
+  };
+  await _db.collection('orders').insertOne(doc);
+  const newOrder = { id, ...doc };
+  delete newOrder._id;
+  orders.unshift(newOrder);
+  return newOrder;
+}
+
+async function updateOrderById(id, fields) {
+  const allowed = ['cliente_id', 'cliente_nombre', 'fecha', 'estado', 'items', 'notas'];
+  const update = {};
+  for (const k of allowed) if (k in fields) update[k] = fields[k];
+  if (fields.items) {
+    update.total = fields.items.reduce((s, i) => s + ((i.precio_unitario || 0) * (i.cantidad || 0)), 0);
+  }
+  await _db.collection('orders').updateOne({ _id: id }, { $set: update });
+  const o = orders.find(o => o.id === id);
+  if (o) Object.assign(o, update);
+}
+
+async function deleteOrderById(id) {
+  await _db.collection('orders').deleteOne({ _id: id });
+  orders = orders.filter(o => o.id !== id);
+}
+
 module.exports = {
   init, getWines, saveWines, getOptions, getStats, getStatus, getAllForChat, getHistory, setMarketPrice,
   getFavorites, addFavorite, removeFavorite, patchFavorite,
   getViews, addView, removeView,
   getQuotes, addQuote, removeQuote,
+  getClients, addClient, updateClientById, deleteClientById,
+  getOrders, addOrder, updateOrderById, deleteOrderById,
 };
