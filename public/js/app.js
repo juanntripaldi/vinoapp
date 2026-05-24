@@ -642,6 +642,7 @@ function renderHistory() {
       <th ${s('precio_curr')} style="text-align:center">P. Nuevo ${histSortIcon('precio_curr')}</th>
       <th ${s('diff_abs')} style="text-align:center">Diferencia ${histSortIcon('diff_abs')}</th>
       <th ${s('diff_pct')} style="text-align:center">% ${histSortIcon('diff_pct')}</th>
+      <th ${s('min_unidades')} style="text-align:center">Mín. ${histSortIcon('min_unidades')}</th>
       <th ${s('date')} style="text-align:center">Fecha ${histSortIcon('date')}</th>
     </tr></thead>
     <tbody>${items.map(h => {
@@ -651,9 +652,10 @@ function renderHistory() {
       const pctHtml = h.diff_pct != null
         ? `<span class="hist-diff ${h.diff_pct < 0 ? 'hist-diff-down' : 'hist-diff-up'}">${h.diff_pct > 0 ? '+' : ''}${h.diff_pct}%</span>`
         : '—';
-      return `<tr>
+      const min = h.min_unidades || 1;
+      return `<tr class="hist-row" onclick="goToWineInList(this.dataset.nombre)" data-nombre="${escHtml(h.nombre || '')}">
         <td><span class="h-icon-inline ${h.type}" title="${typeLabel[h.type]}"><i class="bi ${typeIcon[h.type]}"></i></span></td>
-        <td class="hist-col-nombre"><button class="hist-wine-link" onclick="goToWineInList(this.dataset.nombre)" data-nombre="${escHtml(h.nombre || '')}">${escHtml(h.nombre || '—')}</button></td>
+        <td class="hist-col-nombre">${escHtml(h.nombre || '—')}</td>
         <td class="hist-col-muted">${escHtml(h.bodega || '—')}</td>
         <td class="hist-col-muted">${escHtml(h.cepa || '—')}</td>
         <td><span class="badge-source badge-${h.source}" style="font-size:0.72rem">${SOURCE_LABELS[h.source] || h.source}</span></td>
@@ -661,6 +663,7 @@ function renderHistory() {
         <td style="text-align:center;font-weight:600">${h.precio_curr ? formatPrice(h.precio_curr) : '—'}</td>
         <td style="text-align:center">${diffHtml}</td>
         <td style="text-align:center">${pctHtml}</td>
+        <td style="text-align:center;color:var(--text-muted)">${min > 1 ? min : '—'}</td>
         <td style="text-align:center;font-size:0.78rem;color:var(--text-muted);white-space:nowrap">${formatDate(h.date)}</td>
       </tr>`;
     }).join('')}</tbody>

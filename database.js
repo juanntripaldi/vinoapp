@@ -199,14 +199,14 @@ async function saveWines(source, wines) {
     for (const [key, w] of newMap) {
       const old = oldMap.get(key);
       if (!old) {
-        changes.push({ type: 'added', source, nombre: w.nombre, bodega: w.bodega, cepa: w.cepa, precio: w.precio, date: now });
+        changes.push({ type: 'added', source, nombre: w.nombre, bodega: w.bodega, cepa: w.cepa, precio: w.precio, min_unidades: w.min_unidades || 1, date: now });
       } else if (old.precio != null && w.precio != null && old.precio !== w.precio) {
-        changes.push({ type: 'price_change', source, nombre: w.nombre, bodega: w.bodega, cepa: w.cepa, precio_old: old.precio, precio_new: w.precio, date: now });
+        changes.push({ type: 'price_change', source, nombre: w.nombre, bodega: w.bodega, cepa: w.cepa, precio_old: old.precio, precio_new: w.precio, min_unidades: w.min_unidades || 1, date: now });
       }
     }
     for (const [key, w] of oldMap) {
       if (!newMap.has(key)) {
-        changes.push({ type: 'removed', source, nombre: w.nombre, bodega: w.bodega, cepa: w.cepa, precio: w.precio, date: now });
+        changes.push({ type: 'removed', source, nombre: w.nombre, bodega: w.bodega, cepa: w.cepa, precio: w.precio, min_unidades: w.min_unidades || 1, date: now });
       }
     }
 

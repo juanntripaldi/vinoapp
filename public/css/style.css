@@ -768,12 +768,11 @@ body {
 .hist-sort-icon.active { opacity: 1; }
 .hist-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
 .hist-table tbody tr:last-child { border-bottom: none; }
-.hist-table tbody tr:hover { background: var(--bg); }
+.hist-row { cursor: pointer; }
+.hist-row:hover { background: #FFF5F7; }
+.hist-col-nombre { font-weight: 600; color: var(--wine); max-width: 200px; }
 .hist-table td { padding: 9px 12px; vertical-align: middle; }
-.hist-col-nombre { max-width: 200px; }
 .hist-col-muted { color: var(--text-muted); font-size: 0.82rem; max-width: 140px; }
-.hist-wine-link { background: none; border: none; cursor: pointer; font-weight: 600; color: var(--wine); font-size: inherit; padding: 0; text-align: left; text-decoration: underline; text-decoration-color: transparent; transition: text-decoration-color 0.15s; font-family: inherit; }
-.hist-wine-link:hover { text-decoration-color: var(--wine); }
 .hist-diff { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; white-space: nowrap; }
 .hist-diff-down { background: #DCFCE7; color: #166534; }
 .hist-diff-up   { background: #FEE2E2; color: #991B1B; }
