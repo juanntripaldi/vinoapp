@@ -222,25 +222,16 @@
       </div>
 
       <div class="fav-filters-section">
-        <div class="fav-search-row">
-          <input type="text" id="fav-f-search" class="fav-f-input" placeholder="🔍 Buscar nombre o bodega..." oninput="setFavSearch()">
-          <select id="fav-f-cepa" class="fav-f-input fav-f-select" onchange="setFavCepa()">
-            <option value="">Todas las cepas</option>
-          </select>
-          <button class="fav-clear-btn" onclick="clearFavFilters()">✕ Limpiar</button>
+        <input type="text" id="fav-f-search" class="fav-f-input" placeholder="🔍 Buscar nombre o bodega..." oninput="setFavSearch()">
+        <select id="fav-f-cepa" class="fav-f-input fav-f-select" onchange="setFavCepa()">
+          <option value="">Todas las cepas</option>
+        </select>
+        <div class="fav-source-pills">
+          <button class="fav-source-btn fav-source-cepas" data-source="cepas_argentinas" onclick="toggleFavSource('cepas_argentinas', this)">Cepas Argentinas</button>
+          <button class="fav-source-btn fav-source-mp" data-source="mp_drinks" onclick="toggleFavSource('mp_drinks', this)">MP Drinks</button>
+          <button class="fav-source-btn fav-source-rustico" data-source="rustico" onclick="toggleFavSource('rustico', this)">Rústico</button>
         </div>
-        <div class="fav-tags-row">
-          <div class="fav-filter-bar">
-            <button class="fav-tag-filter-btn active" onclick="setFavTagFilter('all', this)">Todos</button>
-            <button class="fav-tag-filter-btn" onclick="setFavTagFilter('comprar', this)"><i class="bi bi-bag"></i> A comprar</button>
-            <button class="fav-tag-filter-btn" onclick="setFavTagFilter('probar', this)"><i class="bi bi-cup"></i> A probar</button>
-          </div>
-          <div class="fav-source-pills">
-            <button class="fav-source-btn badge-cepas_argentinas" data-source="cepas_argentinas" onclick="toggleFavSource('cepas_argentinas', this)">Cepas Argentinas</button>
-            <button class="fav-source-btn badge-mp_drinks" data-source="mp_drinks" onclick="toggleFavSource('mp_drinks', this)">MP Drinks</button>
-            <button class="fav-source-btn badge-rustico" data-source="rustico" onclick="toggleFavSource('rustico', this)">Rústico</button>
-          </div>
-        </div>
+        <button class="fav-clear-btn" onclick="clearFavFilters()">✕ Limpiar</button>
       </div>
       <div id="favoritos-list"></div>
     </div>

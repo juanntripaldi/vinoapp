@@ -1010,7 +1010,6 @@ function renderFavorites() {
     });
   }
 
-  const tagLabel = { comprar: 'A comprar', probar: 'A probar' };
   const s = col => `class="fav-th-sortable" onclick="setFavSort('${col}')"`;
 
   list.innerHTML = `<div class="fav-table-wrap"><table class="fav-table">
@@ -1023,7 +1022,6 @@ function renderFavorites() {
       <th ${s('market_price')} style="text-align:center">P. Mercado ${favSortIcon('market_price')}</th>
       <th ${s('market_diff')} style="text-align:center">Vs. Mercado ${favSortIcon('market_diff')}</th>
       <th ${s('min_unidades')} style="text-align:center">Mín. ${favSortIcon('min_unidades')}</th>
-      <th>Etiqueta</th>
       <th>Nota</th>
       <th></th>
     </tr></thead>
@@ -1032,9 +1030,6 @@ function renderFavorites() {
       const mDiff = (w.market_price != null && w.precio != null && w.market_price > 0)
         ? Math.round((w.market_price - w.precio) / w.market_price * 100)
         : null;
-      const tagBtn = f.tag
-        ? `<button class="btn-fav-tag-inline fav-tag-${f.tag}" onclick="cycleFavTag(${f.id})">${tagLabel[f.tag]}</button>`
-        : `<button class="btn-fav-tag-inline" onclick="cycleFavTag(${f.id})"><i class="bi bi-tag"></i></button>`;
       return `<tr>
         <td class="fav-col-nombre">${escHtml(w.nombre || '—')}</td>
         <td class="fav-col-bodega">${escHtml(w.bodega || '—')}</td>
@@ -1044,7 +1039,6 @@ function renderFavorites() {
         <td class="fav-col-precio">${w.market_price ? formatPrice(w.market_price) : '—'}</td>
         <td class="td-market-ind">${marketIndicator(mDiff)}</td>
         <td class="fav-col-min">${(w.min_unidades || 1) > 1 ? w.min_unidades : '—'}</td>
-        <td>${tagBtn}</td>
         <td><div class="fav-comment-inline" contenteditable="true" onblur="saveFavComment(${f.id}, this)">${escHtml(f.comment || '')}</div></td>
         <td class="fav-col-actions">
           <button class="btn-fav-action btn-fav-add-quote" onclick="addToQuoteFromFav(${f.id})" title="Agregar al cotizador"><i class="bi bi-cart-plus"></i></button>
