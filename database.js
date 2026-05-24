@@ -230,7 +230,12 @@ async function setMarketPrice(key, price) {
 }
 
 function getHistory(limit = 200) {
-  return (state.history || []).slice(0, limit);
+  const wineMap = new Map(state.wines.map(w => [`${w.source}::${(w.nombre || '').toLowerCase()}`, w]));
+  return (state.history || []).slice(0, limit).map(h => {
+    if (h.min_unidades) return h;
+    const wine = wineMap.get(`${h.source}::${(h.nombre || '').toLowerCase()}`);
+    return wine ? { ...h, min_unidades: wine.min_unidades } : h;
+  });
 }
 
 function getOptions() {
