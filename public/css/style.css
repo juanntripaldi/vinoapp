@@ -755,6 +755,28 @@ body {
 .h-icon.added   { background: #DCFCE7; color: #166534; }
 .h-icon.removed { background: #FEE2E2; color: #991B1B; }
 .h-icon.price_change { background: #DBEAFE; color: #1E40AF; }
+.h-icon-inline { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; font-size: 0.78rem; flex-shrink: 0; }
+.h-icon-inline.added        { background: #DCFCE7; color: #166534; }
+.h-icon-inline.removed      { background: #FEE2E2; color: #991B1B; }
+.h-icon-inline.price_change { background: #DBEAFE; color: #1E40AF; }
+.hist-table-wrap { overflow-x: auto; }
+.hist-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: white; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+.hist-table thead th { background: var(--wine); color: white; padding: 10px 12px; text-align: left; font-weight: 600; white-space: nowrap; }
+.hist-th-sortable { cursor: pointer; user-select: none; }
+.hist-th-sortable:hover { background: var(--wine-light); }
+.hist-sort-icon { opacity: 0.5; font-size: 0.72rem; margin-left: 3px; }
+.hist-sort-icon.active { opacity: 1; }
+.hist-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+.hist-table tbody tr:last-child { border-bottom: none; }
+.hist-table tbody tr:hover { background: var(--bg); }
+.hist-table td { padding: 9px 12px; vertical-align: middle; }
+.hist-col-nombre { max-width: 200px; }
+.hist-col-muted { color: var(--text-muted); font-size: 0.82rem; max-width: 140px; }
+.hist-wine-link { background: none; border: none; cursor: pointer; font-weight: 600; color: var(--wine); font-size: inherit; padding: 0; text-align: left; text-decoration: underline; text-decoration-color: transparent; transition: text-decoration-color 0.15s; font-family: inherit; }
+.hist-wine-link:hover { text-decoration-color: var(--wine); }
+.hist-diff { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; white-space: nowrap; }
+.hist-diff-down { background: #DCFCE7; color: #166534; }
+.hist-diff-up   { background: #FEE2E2; color: #991B1B; }
 .h-info { flex: 1; min-width: 0; }
 .h-nombre { font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .h-sub { color: var(--text-muted); font-size: 0.78rem; margin-top: 2px; }

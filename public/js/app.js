@@ -9,6 +9,8 @@ let debounceTimer = null;
 let isUpdating = false;
 let currentWines = [];
 let historialFilter = 'all';
+let histSort = 'date';
+let histSortDir = 'desc';
 let allHistory = [];
 
 const SOURCE_LABELS = {
@@ -578,58 +580,91 @@ function setHistorialFilter(type, btn) {
   renderHistory();
 }
 
+function setHistSort(col) {
+  if (histSort === col) histSortDir = histSortDir === 'asc' ? 'desc' : 'asc';
+  else { histSort = col; histSortDir = col === 'date' ? 'desc' : 'asc'; }
+  renderHistory();
+}
+
+function histSortIcon(col) {
+  if (histSort !== col) return '<span class="hist-sort-icon">↕</span>';
+  return `<span class="hist-sort-icon active">${histSortDir === 'asc' ? '↑' : '↓'}</span>`;
+}
+
+function goToWineInList(nombre) {
+  showView('lista');
+  const input = document.getElementById('f-nombre');
+  if (input) { input.value = nombre; loadWines(); }
+}
+
 function renderHistory() {
   const list = document.getElementById('historial-list');
-  const items = historialFilter === 'all' ? allHistory : allHistory.filter(h => h.type === historialFilter);
+  const typeIcon  = { added: 'bi-plus-lg', removed: 'bi-dash-lg', price_change: 'bi-arrow-left-right' };
+  const typeLabel = { added: 'Agregado', removed: 'Quitado', price_change: 'Cambio' };
+
+  let items = (historialFilter === 'all' ? allHistory : allHistory.filter(h => h.type === historialFilter))
+    .map(h => ({
+      ...h,
+      precio_prev: h.type === 'price_change' ? h.precio_old : (h.type === 'removed' ? h.precio : null),
+      precio_curr: h.type === 'price_change' ? h.precio_new : (h.type === 'added'   ? h.precio : null),
+      diff_abs: (h.type === 'price_change' && h.precio_old && h.precio_new) ? h.precio_new - h.precio_old : null,
+      diff_pct: (h.type === 'price_change' && h.precio_old && h.precio_new) ? Math.round((h.precio_new - h.precio_old) / h.precio_old * 100) : null,
+    }));
 
   if (!items.length) {
-    list.innerHTML = `<div class="historial-empty">
-      ${allHistory.length === 0
+    list.innerHTML = `<div class="historial-empty">${
+      allHistory.length === 0
         ? 'No hay historial todavía. Los cambios se registran al actualizar los datos de los proveedores.'
-        : 'No hay eventos de este tipo.'}
-    </div>`;
+        : 'No hay eventos de este tipo.'}</div>`;
     return;
   }
 
-  const typeIcon = { added: 'bi-plus-lg', removed: 'bi-dash-lg', price_change: 'bi-arrow-left-right' };
-  const typeLabel = { added: 'Agregado', removed: 'Quitado', price_change: 'Precio' };
-
-  // Agrupar por fecha
-  const groups = {};
-  items.forEach(h => {
-    const d = new Date(h.date);
-    const key = d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(h);
+  const dir = histSortDir === 'asc' ? 1 : -1;
+  items.sort((a, b) => {
+    const va = a[histSort], vb = b[histSort];
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    if (typeof va === 'number' && typeof vb === 'number') return dir * (va - vb);
+    return dir * String(va).localeCompare(String(vb), 'es');
   });
 
-  list.innerHTML = Object.entries(groups).map(([date, group]) => {
-    const rows = group.map(h => {
-      const precioChange = h.type === 'price_change'
-        ? `<div class="h-precio-change">
-            <span class="h-precio-old">${formatPrice(h.precio_old)}</span>
-            <i class="bi bi-arrow-right" style="font-size:0.75rem;color:var(--text-muted)"></i>
-            <span class="h-precio-new"> ${formatPrice(h.precio_new)}</span>
-            ${h.precio_old && h.precio_new ? `<span style="font-size:0.75rem;color:var(--text-muted);margin-left:6px">(${h.precio_new > h.precio_old ? '+' : ''}${Math.round((h.precio_new - h.precio_old) / h.precio_old * 100)}%)</span>` : ''}
-           </div>`
-        : h.precio != null ? `<div style="font-size:0.82rem;color:var(--text-muted);margin-top:2px">${formatPrice(h.precio)}</div>` : '';
+  const s = col => `class="hist-th-sortable" onclick="setHistSort('${col}')"`;
 
-      return `<div class="historial-item">
-        <div class="h-icon ${h.type}"><i class="bi ${typeIcon[h.type]}"></i></div>
-        <div class="h-info">
-          <div class="h-nombre">${escHtml(h.nombre || '—')}</div>
-          <div class="h-sub">${[h.bodega, h.cepa].filter(Boolean).map(escHtml).join(' · ')}</div>
-          ${precioChange}
-        </div>
-        <div class="h-badge">
-          <div style="text-align:right"><span class="badge-source badge-${h.source}" style="font-size:0.7rem">${SOURCE_LABELS[h.source] || h.source}</span></div>
-          <div class="h-time">${formatDate(h.date)}</div>
-        </div>
-      </div>`;
-    }).join('');
-
-    return `<div class="historial-group-date">${date}</div>${rows}`;
-  }).join('');
+  list.innerHTML = `<div class="hist-table-wrap"><table class="hist-table">
+    <thead><tr>
+      <th>Tipo</th>
+      <th ${s('nombre')}>Nombre ${histSortIcon('nombre')}</th>
+      <th ${s('bodega')}>Bodega ${histSortIcon('bodega')}</th>
+      <th ${s('cepa')}>Cepa ${histSortIcon('cepa')}</th>
+      <th>Proveedor</th>
+      <th ${s('precio_prev')} style="text-align:center">P. Anterior ${histSortIcon('precio_prev')}</th>
+      <th ${s('precio_curr')} style="text-align:center">P. Nuevo ${histSortIcon('precio_curr')}</th>
+      <th ${s('diff_abs')} style="text-align:center">Diferencia ${histSortIcon('diff_abs')}</th>
+      <th ${s('diff_pct')} style="text-align:center">% ${histSortIcon('diff_pct')}</th>
+      <th ${s('date')} style="text-align:center">Fecha ${histSortIcon('date')}</th>
+    </tr></thead>
+    <tbody>${items.map(h => {
+      const diffHtml = h.diff_abs != null
+        ? `<span class="hist-diff ${h.diff_abs < 0 ? 'hist-diff-down' : 'hist-diff-up'}">${h.diff_abs > 0 ? '+' : ''}${formatPrice(h.diff_abs)}</span>`
+        : '—';
+      const pctHtml = h.diff_pct != null
+        ? `<span class="hist-diff ${h.diff_pct < 0 ? 'hist-diff-down' : 'hist-diff-up'}">${h.diff_pct > 0 ? '+' : ''}${h.diff_pct}%</span>`
+        : '—';
+      return `<tr>
+        <td><span class="h-icon-inline ${h.type}" title="${typeLabel[h.type]}"><i class="bi ${typeIcon[h.type]}"></i></span></td>
+        <td class="hist-col-nombre"><button class="hist-wine-link" onclick="goToWineInList(this.dataset.nombre)" data-nombre="${escHtml(h.nombre || '')}">${escHtml(h.nombre || '—')}</button></td>
+        <td class="hist-col-muted">${escHtml(h.bodega || '—')}</td>
+        <td class="hist-col-muted">${escHtml(h.cepa || '—')}</td>
+        <td><span class="badge-source badge-${h.source}" style="font-size:0.72rem">${SOURCE_LABELS[h.source] || h.source}</span></td>
+        <td style="text-align:center;color:var(--text-muted)">${h.precio_prev ? formatPrice(h.precio_prev) : '—'}</td>
+        <td style="text-align:center;font-weight:600">${h.precio_curr ? formatPrice(h.precio_curr) : '—'}</td>
+        <td style="text-align:center">${diffHtml}</td>
+        <td style="text-align:center">${pctHtml}</td>
+        <td style="text-align:center;font-size:0.78rem;color:var(--text-muted);white-space:nowrap">${formatDate(h.date)}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
 }
 
 /* ─── Dashboard ──────────────────────────────────────────────────────────────── */
