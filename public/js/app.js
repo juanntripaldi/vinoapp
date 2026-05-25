@@ -1573,4 +1573,4 @@ async function init() {
   await migrateFromLocalStorage();
 }
 
-init();
+// init() se llama desde index.html después de cargar crm.js
