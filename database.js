@@ -202,8 +202,19 @@ async function saveWines(source, wines) {
   state.meta[source] = { last_updated: now, count: toInsert.length };
 
   if (oldWines.length > 0) {
-    const oldMap = new Map(oldWines.map(w => [(w.nombre || '').toLowerCase(), w]));
-    const newMap = new Map(toInsert.map(w => [(w.nombre || '').toLowerCase(), w]));
+    // Para Rústico (PDF) normalizamos más agresivamente para evitar falsos
+    // positivos por espacios extra, acentos o caracteres raros del parser.
+    const normKey = nombre => {
+      const base = (nombre || '').toLowerCase();
+      if (source !== 'rustico') return base;
+      return base
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+    const oldMap = new Map(oldWines.map(w => [normKey(w.nombre), w]));
+    const newMap = new Map(toInsert.map(w => [normKey(w.nombre), w]));
     const changes = [];
 
     for (const [key, w] of newMap) {
