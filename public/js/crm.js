@@ -427,6 +427,7 @@ function _filteredOrders() {
     else if (col === 'costo')   { va = a.total || 0;          vb = b.total  || 0; }
     else if (col === 'venta')   { va = a.total_venta ?? -1;   vb = b.total_venta ?? -1; }
     else if (col === 'ganancia'){ va = (a.total_venta != null ? a.total_venta - a.total : -Infinity); vb = (b.total_venta != null ? b.total_venta - b.total : -Infinity); }
+    else if (col === 'margen')  { va = (a.total_venta > 0 ? (a.total_venta - a.total) / a.total_venta : -Infinity); vb = (b.total_venta > 0 ? (b.total_venta - b.total) / b.total_venta : -Infinity); }
     else { va = 0; vb = 0; }
     if (va < vb) return -dir;
     if (va > vb) return  dir;
@@ -619,9 +620,8 @@ function renderOrdersList() {
     const ventaHtml = o.total_venta != null
       ? `<span class="td-venta-val">${formatPrice(o.total_venta)}</span>`
       : '<span class="gan-na">—</span>';
-    const ganHtml  = ganancia != null
-      ? `<span class="${ganCls}">${formatPrice(ganancia)}</span><small class="${ganCls}"> ${margen}</small>`
-      : '<span class="gan-na">—</span>';
+    const ganHtml    = ganancia != null ? `<span class="${ganCls}">${formatPrice(ganancia)}</span>` : '<span class="gan-na">—</span>';
+    const margenHtml = margen    != null ? `<span class="${ganCls}">${margen}</span>`               : '<span class="gan-na">—</span>';
     return `
     <tr class="order-row" onclick="openPedidoModal(${o.id})">
       <td class="td-num">#${o.numero}</td>
@@ -632,6 +632,7 @@ function renderOrdersList() {
       <td class="td-total">${formatPrice(o.total)}</td>
       <td class="td-venta">${ventaHtml}</td>
       <td class="td-gan">${ganHtml}</td>
+      <td class="td-margen">${margenHtml}</td>
       <td class="td-order-actions" onclick="event.stopPropagation()">
         <button class="btn-order-action ${o.excluir_stats ? 'btn-excluido' : ''}" onclick="toggleExcluirStats(${o.id})" title="${o.excluir_stats ? 'Excluido de stats — click para incluir' : 'Incluido en stats — click para excluir'}"><i class="bi bi-graph-up${o.excluir_stats ? '-arrow' : ''}"></i></button>
         <button class="btn-order-action" onclick="openPedidoModal(${o.id})" title="Editar"><i class="bi bi-pencil"></i></button>

@@ -1208,6 +1208,7 @@ body {
 /* Venta column */
 .td-venta { padding:12px 14px; }
 .td-venta-val { font-weight:600;color:#2e9e5c; }
+.td-margen { padding:12px 10px;font-weight:600;font-size:0.88rem; }
 
 /* Excluir stats */
 .btn-excluido { color:var(--text-muted) !important;opacity:0.45; }
