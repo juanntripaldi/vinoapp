@@ -440,15 +440,16 @@
         <input type="date" class="filter-order-input" id="filter-order-hasta" onchange="renderOrdersList()" title="Hasta">
         <button class="btn-new-order" style="background:var(--gold);color:var(--wine-dark)" onclick="openImportModal()"><i class="bi bi-upload"></i> Importar</button>
       </div>
+      <div id="orders-dash"></div>
       <div class="orders-table-wrap">
         <table class="orders-table">
           <thead>
             <tr>
-              <th>#</th><th>Fecha</th><th>Cliente</th><th>Estado</th><th>Ítems</th><th>Costo</th><th>Ganancia</th><th></th>
+              <th>#</th><th>Fecha</th><th>Cliente</th><th>Estado</th><th>Ítems</th><th>Costo</th><th>Venta</th><th>Ganancia</th><th></th>
             </tr>
           </thead>
           <tbody id="orders-tbody">
-            <tr><td colspan="8" class="orders-empty">Cargando pedidos...</td></tr>
+            <tr><td colspan="9" class="orders-empty">Cargando pedidos...</td></tr>
           </tbody>
         </table>
       </div>

@@ -1179,6 +1179,36 @@ body {
 #pedido-total-venta { width:120px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.95rem;text-align:right; }
 .pedido-venta-ganancia { font-weight:600;font-size:0.9rem;min-width:110px; }
 
+/* Orders dashboard */
+.odash-wrap { margin-bottom:20px; }
+.odash-kpis { display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px; }
+.odash-kpi { background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;min-width:130px;flex:1; }
+.odash-kpi-val { font-size:1.25rem;font-weight:700;color:var(--text); }
+.odash-kpi-label { font-size:0.75rem;color:var(--text-muted);margin-top:2px; }
+.odash-kpi-label small { display:block;font-size:0.7rem; }
+.odash-venta { color:#2e9e5c; }
+.odash-gan   { color:#2e9e5c; }
+.odash-proy  { color:var(--gold); }
+.odash-kpi-proy { border-color:var(--gold); }
+
+.odash-charts { display:grid;grid-template-columns:1fr 340px;gap:14px; }
+@media (max-width:900px) { .odash-charts { grid-template-columns:1fr; } }
+
+.odash-chart-card { background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px; }
+.odash-chart-title { font-size:0.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px; }
+#odash-chart-evol { max-height:160px; }
+
+.odash-bottles { display:flex;flex-direction:column;gap:7px; }
+.odash-bottle-row { display:flex;align-items:center;gap:8px;font-size:0.82rem; }
+.odash-bottle-name { min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text); }
+.odash-bottle-bar-wrap { width:80px;height:6px;background:var(--border);border-radius:3px;flex-shrink:0; }
+.odash-bottle-bar { height:6px;background:var(--wine);border-radius:3px;transition:width .3s; }
+.odash-bottle-qty { font-weight:700;color:var(--wine);width:18px;text-align:right;flex-shrink:0; }
+
+/* Venta column */
+.td-venta { padding:12px 14px; }
+.td-venta-val { font-weight:600;color:#2e9e5c; }
+
 /* Import modal */
 .import-instructions { font-size:0.88rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6; }
 .import-instructions code { background:var(--bg);padding:1px 5px;border-radius:4px;font-size:0.82rem; }

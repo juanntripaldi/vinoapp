@@ -368,6 +368,7 @@ function renderClientDetail() {
 /* ─── Vista: Pedidos ─────────────────────────────────────────────────────────── */
 function renderPedidos() {
   renderActivePedidoBanner();
+  renderOrdersDash();
   renderOrdersList();
 }
 
@@ -387,26 +388,179 @@ function renderActivePedidoBanner() {
     </div>`;
 }
 
-function renderOrdersList() {
-  const tbody = document.getElementById('orders-tbody');
-  if (!tbody) return;
-
+function _filteredOrders() {
   let list = [..._orders];
   const fCliente = (document.getElementById('filter-order-cliente')?.value || '').toLowerCase();
   const fEstado  = document.getElementById('filter-order-estado')?.value  || '';
   const fDesde   = document.getElementById('filter-order-desde')?.value   || '';
   const fHasta   = document.getElementById('filter-order-hasta')?.value   || '';
-
   if (fCliente) list = list.filter(o => (o.cliente_nombre || '').toLowerCase().includes(fCliente));
   if (fEstado)  list = list.filter(o => o.estado === fEstado);
   if (fDesde)   list = list.filter(o => String(o.fecha) >= fDesde);
   if (fHasta)   list = list.filter(o => String(o.fecha) <= fHasta);
+  return list;
+}
+
+let _ordersChart = null;
+
+function renderOrdersDash() {
+  const el = document.getElementById('orders-dash');
+  if (!el) return;
+
+  const list = _orders.filter(o => o.estado !== 'cancelado');
+  if (!list.length) { el.innerHTML = ''; return; }
+
+  const conVenta  = list.filter(o => o.total_venta != null && o.total_venta > 0);
+  const avgCosto  = list.reduce((s, o) => s + o.total, 0) / list.length;
+  const avgVenta  = conVenta.length ? conVenta.reduce((s, o) => s + o.total_venta, 0) / conVenta.length : null;
+  const totalGan  = conVenta.reduce((s, o) => s + (o.total_venta - o.total), 0);
+  const totalVent = conVenta.reduce((s, o) => s + o.total_venta, 0);
+  const avgMargen = totalVent > 0 ? ((totalGan / totalVent) * 100).toFixed(1) : null;
+
+  // Ventas por mes (últimos 12 meses)
+  const byMonth = {};
+  for (const o of list) {
+    const ym = String(o.fecha || '').slice(0, 7);
+    if (!ym) continue;
+    if (!byMonth[ym]) byMonth[ym] = { costo: 0, venta: 0, bots: 0 };
+    byMonth[ym].costo += o.total;
+    if (o.total_venta) byMonth[ym].venta += o.total_venta;
+    byMonth[ym].bots += (o.items || []).reduce((s, i) => s + (i.cantidad || 1), 0);
+  }
+  const months = Object.keys(byMonth).sort().slice(-12);
+
+  // Botellas más vendidas
+  const bottleCount = {};
+  for (const o of list) {
+    for (const it of (o.items || [])) {
+      const k = it.nombre || '?';
+      bottleCount[k] = (bottleCount[k] || 0) + (it.cantidad || 1);
+    }
+  }
+  const topBottles = Object.entries(bottleCount).sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+  // Proyección: promedio últimos 3 meses × 12
+  const last3 = months.slice(-3);
+  const avgMonthVenta = last3.length
+    ? last3.reduce((s, m) => s + (byMonth[m].venta || byMonth[m].costo), 0) / last3.length
+    : 0;
+  const proyAnual = avgMonthVenta * 12;
+
+  const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  function fmtYM(ym) {
+    const [y, m] = ym.split('-');
+    return MESES[parseInt(m) - 1] + ' ' + y.slice(2);
+  }
+
+  el.innerHTML = `
+    <div class="odash-wrap">
+      <div class="odash-kpis">
+        <div class="odash-kpi">
+          <div class="odash-kpi-val">${formatPrice(Math.round(avgCosto))}</div>
+          <div class="odash-kpi-label">Ticket costo prom.</div>
+        </div>
+        ${avgVenta != null ? `<div class="odash-kpi">
+          <div class="odash-kpi-val odash-venta">${formatPrice(Math.round(avgVenta))}</div>
+          <div class="odash-kpi-label">Ticket venta prom.</div>
+        </div>` : ''}
+        ${avgMargen != null ? `<div class="odash-kpi">
+          <div class="odash-kpi-val odash-gan">${avgMargen}%</div>
+          <div class="odash-kpi-label">Margen prom.</div>
+        </div>` : ''}
+        <div class="odash-kpi">
+          <div class="odash-kpi-val">${list.length}</div>
+          <div class="odash-kpi-label">Pedidos totales</div>
+        </div>
+        ${proyAnual > 0 ? `<div class="odash-kpi odash-kpi-proy">
+          <div class="odash-kpi-val odash-proy">${formatPrice(Math.round(proyAnual))}</div>
+          <div class="odash-kpi-label">Proyección anual <small>(×12 últimos 3m)</small></div>
+        </div>` : ''}
+      </div>
+      <div class="odash-charts">
+        <div class="odash-chart-card">
+          <div class="odash-chart-title">Evolución mensual</div>
+          <canvas id="odash-chart-evol" height="160"></canvas>
+        </div>
+        <div class="odash-chart-card odash-bottles-card">
+          <div class="odash-chart-title">Botellas más vendidas</div>
+          <div class="odash-bottles">
+            ${topBottles.map(([nombre, qty]) => {
+              const pct = Math.round((qty / topBottles[0][1]) * 100);
+              return `<div class="odash-bottle-row">
+                <span class="odash-bottle-name" title="${escHtml(nombre)}">${escHtml(nombre.length > 30 ? nombre.slice(0,28)+'…' : nombre)}</span>
+                <div class="odash-bottle-bar-wrap">
+                  <div class="odash-bottle-bar" style="width:${pct}%"></div>
+                </div>
+                <span class="odash-bottle-qty">${qty}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  // Chart evolución
+  const ctx = document.getElementById('odash-chart-evol');
+  if (!ctx) return;
+  if (_ordersChart) { _ordersChart.destroy(); _ordersChart = null; }
+  _ordersChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: months.map(fmtYM),
+      datasets: [
+        {
+          label: 'Costo', type: 'bar',
+          data: months.map(m => byMonth[m].costo),
+          backgroundColor: 'rgba(123,28,46,0.25)',
+          borderColor: 'rgba(123,28,46,0.6)',
+          borderWidth: 1, borderRadius: 4,
+        },
+        {
+          label: 'Venta', type: 'bar',
+          data: months.map(m => byMonth[m].venta || null),
+          backgroundColor: 'rgba(46,158,92,0.3)',
+          borderColor: 'rgba(46,158,92,0.7)',
+          borderWidth: 1, borderRadius: 4,
+        },
+        {
+          label: 'Botellas', type: 'line',
+          data: months.map(m => byMonth[m].bots),
+          borderColor: '#C9A870', backgroundColor: 'transparent',
+          pointBackgroundColor: '#C9A870', tension: 0.3, borderWidth: 2,
+          yAxisID: 'y2',
+        },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { boxWidth: 10, font: { size: 11 } } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: {
+          ticks: { callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v), font: { size: 10 } },
+          grid: { color: 'rgba(0,0,0,0.05)' },
+        },
+        y2: {
+          position: 'right', grid: { display: false },
+          ticks: { font: { size: 10 } },
+          title: { display: true, text: 'Botellas', font: { size: 10 } },
+        },
+      },
+    },
+  });
+}
+
+function renderOrdersList() {
+  const tbody = document.getElementById('orders-tbody');
+  if (!tbody) return;
+
+  const list = _filteredOrders();
 
   const countEl = document.getElementById('orders-count');
   if (countEl) countEl.textContent = `${list.length} pedido${list.length !== 1 ? 's' : ''}`;
 
   if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="8" class="orders-empty">
+    tbody.innerHTML = `<tr><td colspan="9" class="orders-empty">
       <i class="bi bi-clipboard" style="font-size:2rem;display:block;margin-bottom:10px;color:var(--gold)"></i>
       ${_orders.length === 0
         ? 'No hay pedidos todavía.<br><small>Creá el primero con "+ Nuevo pedido".</small>'
@@ -420,6 +574,9 @@ function renderOrdersList() {
     const margen   = ganancia != null && o.total_venta > 0
       ? ((ganancia / o.total_venta) * 100).toFixed(0) + '%' : null;
     const ganCls   = ganancia == null ? '' : ganancia >= 0 ? 'gan-pos' : 'gan-neg';
+    const ventaHtml = o.total_venta != null
+      ? `<span class="td-venta-val">${formatPrice(o.total_venta)}</span>`
+      : '<span class="gan-na">—</span>';
     const ganHtml  = ganancia != null
       ? `<span class="${ganCls}">${formatPrice(ganancia)}</span><small class="${ganCls}"> ${margen}</small>`
       : '<span class="gan-na">—</span>';
@@ -431,6 +588,7 @@ function renderOrdersList() {
       <td>${_estadoBadge(o.estado)}</td>
       <td class="td-items">${(o.items || []).length} ítem${(o.items || []).length !== 1 ? 's' : ''}</td>
       <td class="td-total">${formatPrice(o.total)}</td>
+      <td class="td-venta">${ventaHtml}</td>
       <td class="td-gan">${ganHtml}</td>
       <td class="td-order-actions" onclick="event.stopPropagation()">
         <button class="btn-order-action" onclick="openPedidoModal(${o.id})" title="Editar"><i class="bi bi-pencil"></i></button>
