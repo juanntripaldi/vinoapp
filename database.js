@@ -458,6 +458,10 @@ async function addOrder(data) {
   const numero = _nextOrderNum++;
   const items = data.items || [];
   const total = items.reduce((s, i) => s + ((i.precio_unitario || 0) * (i.cantidad || 0)), 0);
+  const totalVentaFromItems = items.some(i => i.precio_venta)
+    ? items.reduce((s, i) => s + ((i.precio_venta || 0) * (i.cantidad || 0)), 0)
+    : null;
+  const total_venta = data.total_venta != null ? data.total_venta : totalVentaFromItems;
   const doc = {
     _id: id, numero,
     cliente_id: data.cliente_id || null,
@@ -465,6 +469,7 @@ async function addOrder(data) {
     fecha: data.fecha || now.split('T')[0],
     estado: data.estado || 'borrador',
     items, total,
+    ...(total_venta != null && { total_venta }),
     notas: data.notas || null,
     created_at: now,
   };
@@ -476,11 +481,14 @@ async function addOrder(data) {
 }
 
 async function updateOrderById(id, fields) {
-  const allowed = ['cliente_id', 'cliente_nombre', 'fecha', 'estado', 'items', 'notas'];
+  const allowed = ['cliente_id', 'cliente_nombre', 'fecha', 'estado', 'items', 'notas', 'total_venta'];
   const update = {};
   for (const k of allowed) if (k in fields) update[k] = fields[k];
   if (fields.items) {
     update.total = fields.items.reduce((s, i) => s + ((i.precio_unitario || 0) * (i.cantidad || 0)), 0);
+    if (fields.items.some(i => i.precio_venta)) {
+      update.total_venta = fields.items.reduce((s, i) => s + ((i.precio_venta || 0) * (i.cantidad || 0)), 0);
+    }
   }
   await _db.collection('orders').updateOne({ _id: id }, { $set: update });
   const o = orders.find(o => o.id === id);

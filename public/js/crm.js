@@ -299,9 +299,11 @@ function renderClientDetail() {
     .filter(o => o.cliente_id === c.id)
     .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
 
-  const totalGasto  = co.reduce((s, o) => s + (o.total || 0), 0);
-  const avgTicket   = co.length ? totalGasto / co.length : 0;
-  const confirmados = co.filter(o => o.estado === 'confirmado' || o.estado === 'entregado').length;
+  const totalGasto    = co.reduce((s, o) => s + (o.total || 0), 0);
+  const totalVenta    = co.reduce((s, o) => s + (o.total_venta != null ? o.total_venta : (o.total || 0)), 0);
+  const totalGanancia = co.reduce((s, o) => s + (o.total_venta != null ? o.total_venta - o.total : 0), 0);
+  const avgTicket     = co.length ? totalGasto / co.length : 0;
+  const confirmados   = co.filter(o => o.estado === 'confirmado' || o.estado === 'entregado').length;
 
   const cepaCounts = {};
   co.forEach(o => (o.items || []).forEach(i => {
@@ -330,8 +332,10 @@ function renderClientDetail() {
     <div class="panel-stats-grid">
       <div class="panel-stat"><div class="ps-value">${co.length}</div><div class="ps-label">Pedidos</div></div>
       <div class="panel-stat"><div class="ps-value">${confirmados}</div><div class="ps-label">Confirmados</div></div>
-      <div class="panel-stat"><div class="ps-value">${formatPrice(totalGasto)}</div><div class="ps-label">Total gastado</div></div>
+      <div class="panel-stat"><div class="ps-value">${formatPrice(totalGasto)}</div><div class="ps-label">Costo total</div></div>
       <div class="panel-stat"><div class="ps-value">${formatPrice(avgTicket)}</div><div class="ps-label">Ticket prom.</div></div>
+      ${totalGanancia > 0 ? `<div class="panel-stat"><div class="ps-value gan-pos">${formatPrice(totalVenta)}</div><div class="ps-label">Facturado</div></div>` : ''}
+      ${totalGanancia > 0 ? `<div class="panel-stat"><div class="ps-value gan-pos">${formatPrice(totalGanancia)}</div><div class="ps-label">Ganancia total</div></div>` : ''}
     </div>
     ${topCepas.length ? `
       <div class="panel-section-title">Cepas preferidas</div>
@@ -341,7 +345,10 @@ function renderClientDetail() {
     <div class="panel-section-title">Historial de pedidos</div>
     ${co.length === 0
       ? '<div class="panel-no-orders">Sin pedidos todavía</div>'
-      : co.map(o => `
+      : co.map(o => {
+          const gan = o.total_venta != null ? o.total_venta - o.total : null;
+          const ganTxt = gan != null ? `<span class="por-gan ${gan >= 0 ? 'gan-pos' : 'gan-neg'}">+${formatPrice(gan)}</span>` : '';
+          return `
         <div class="panel-order-row" onclick="openPedidoModal(${o.id})">
           <div class="por-left">
             <span class="por-num">#${o.numero}</span>
@@ -351,8 +358,9 @@ function renderClientDetail() {
           <div class="por-right">
             <span class="por-items">${(o.items || []).length} ítem${(o.items || []).length !== 1 ? 's' : ''}</span>
             <span class="por-total">${formatPrice(o.total)}</span>
+            ${ganTxt}
           </div>
-        </div>`).join('')
+        </div>`;}).join('')
     }
   `;
 }
@@ -398,7 +406,7 @@ function renderOrdersList() {
   if (countEl) countEl.textContent = `${list.length} pedido${list.length !== 1 ? 's' : ''}`;
 
   if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="orders-empty">
+    tbody.innerHTML = `<tr><td colspan="8" class="orders-empty">
       <i class="bi bi-clipboard" style="font-size:2rem;display:block;margin-bottom:10px;color:var(--gold)"></i>
       ${_orders.length === 0
         ? 'No hay pedidos todavía.<br><small>Creá el primero con "+ Nuevo pedido".</small>'
@@ -407,7 +415,15 @@ function renderOrdersList() {
     return;
   }
 
-  tbody.innerHTML = list.map(o => `
+  tbody.innerHTML = list.map(o => {
+    const ganancia = o.total_venta != null ? o.total_venta - o.total : null;
+    const margen   = ganancia != null && o.total_venta > 0
+      ? ((ganancia / o.total_venta) * 100).toFixed(0) + '%' : null;
+    const ganCls   = ganancia == null ? '' : ganancia >= 0 ? 'gan-pos' : 'gan-neg';
+    const ganHtml  = ganancia != null
+      ? `<span class="${ganCls}">${formatPrice(ganancia)}</span><small class="${ganCls}"> ${margen}</small>`
+      : '<span class="gan-na">—</span>';
+    return `
     <tr class="order-row" onclick="openPedidoModal(${o.id})">
       <td class="td-num">#${o.numero}</td>
       <td class="td-fecha">${_fmtDate(o.fecha)}</td>
@@ -415,11 +431,13 @@ function renderOrdersList() {
       <td>${_estadoBadge(o.estado)}</td>
       <td class="td-items">${(o.items || []).length} ítem${(o.items || []).length !== 1 ? 's' : ''}</td>
       <td class="td-total">${formatPrice(o.total)}</td>
+      <td class="td-gan">${ganHtml}</td>
       <td class="td-order-actions" onclick="event.stopPropagation()">
         <button class="btn-order-action" onclick="openPedidoModal(${o.id})" title="Editar"><i class="bi bi-pencil"></i></button>
         <button class="btn-order-action btn-order-del" onclick="confirmDeleteOrder(${o.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 async function confirmDeleteOrder(id) {

@@ -1052,6 +1052,7 @@ body {
 .por-right { margin-left:auto;display:flex;align-items:center;gap:10px;font-size:0.85rem; }
 .por-total { font-weight:600; }
 .por-items { color:var(--text-muted); }
+.por-gan { font-size:0.78rem;font-weight:600; }
 .panel-no-orders { color:var(--text-muted);font-size:0.88rem;text-align:center;padding:20px; }
 
 /* ─── Vista Pedidos ──────────────────────────────────────────────────────────── */
@@ -1078,9 +1079,14 @@ body {
 .orders-table tbody tr:last-child { border-bottom:none; }
 .orders-table tbody tr:hover { background:var(--bg); }
 .td-num { font-weight:700;color:var(--wine);padding:12px 14px; }
-.td-fecha,.td-cliente,.td-items,.td-total { padding:12px 14px; }
+.td-fecha,.td-cliente,.td-items,.td-total,.td-gan { padding:12px 14px; }
 .td-items { color:var(--text-muted);font-size:0.82rem; }
 .td-total { font-weight:600; }
+.td-gan { font-weight:600; }
+.td-gan small { margin-left:4px;font-size:0.75rem; }
+.gan-pos { color:#2e9e5c; }
+.gan-neg { color:var(--wine); }
+.gan-na  { color:var(--text-muted); }
 .td-order-actions { text-align:right;white-space:nowrap;padding:12px 14px; }
 .btn-order-action { background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px 7px;border-radius:6px;font-size:0.85rem; }
 .btn-order-action:hover { background:var(--bg);color:var(--text); }
