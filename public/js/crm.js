@@ -475,8 +475,11 @@ function openPedidoModal(orderId = null, presetClienteId = null, fromActive = fa
   document.getElementById('pedido-fecha').value  = _modalPedido.fecha;
   document.getElementById('pedido-estado').value = _modalPedido.estado;
   document.getElementById('pedido-notas').value  = _modalPedido.notas;
+  const tvInput = document.getElementById('pedido-total-venta');
+  if (tvInput) tvInput.value = _modalPedido.total_venta != null ? _modalPedido.total_venta : '';
   _setModalClient(_modalPedido.cliente_id, _modalPedido.cliente_nombre);
   renderPedidoModalItems();
+  renderPedidoVentaGanancia();
   modal.style.display = 'flex';
   setTimeout(() => document.getElementById('pedido-wine-q').focus(), 50);
 }
@@ -584,6 +587,18 @@ function addWineToPedidoModal(idx) {
   showToast(`${w.nombre} agregado`, 'success', 1500);
 }
 
+function renderPedidoVentaGanancia() {
+  const el = document.getElementById('pedido-venta-ganancia');
+  if (!el || !_modalPedido) return;
+  const tv = parseFloat(document.getElementById('pedido-total-venta')?.value);
+  const costo = _modalPedido.items.reduce((s, i) => s + (i.precio_unitario || 0) * (i.cantidad || 0), 0);
+  if (!tv || !costo) { el.textContent = ''; return; }
+  const gan = tv - costo;
+  const pct = ((gan / tv) * 100).toFixed(0);
+  el.textContent = (gan >= 0 ? '+' : '') + formatPrice(gan) + ' (' + pct + '%)';
+  el.className = 'pedido-venta-ganancia ' + (gan >= 0 ? 'gan-pos' : 'gan-neg');
+}
+
 function renderPedidoModalItems() {
   if (!_modalPedido) return;
   const list    = document.getElementById('pedido-modal-items');
@@ -645,6 +660,8 @@ async function savePedidoModal() {
   _modalPedido.estado = document.getElementById('pedido-estado').value;
   _modalPedido.fecha  = document.getElementById('pedido-fecha').value;
   _modalPedido.notas  = document.getElementById('pedido-notas').value.trim() || null;
+  const tvRaw = parseFloat(document.getElementById('pedido-total-venta')?.value);
+  _modalPedido.total_venta = isNaN(tvRaw) || tvRaw <= 0 ? null : tvRaw;
 
   if (!_modalPedido.cliente_id) {
     const nombre = document.getElementById('pedido-cliente-search').value.trim();

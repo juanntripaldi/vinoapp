@@ -575,6 +575,14 @@
       </div>
       <div id="pedido-modal-items"></div>
       <div id="pedido-modal-total" class="pedido-total-row"></div>
+      <div class="pedido-venta-row">
+        <label>Total vendido <span style="font-weight:400;color:var(--text-muted)">(precio cobrado al cliente)</span></label>
+        <div class="pedido-venta-input-wrap">
+          <span class="pedido-venta-prefix">$</span>
+          <input id="pedido-total-venta" type="number" min="0" step="100" placeholder="0" oninput="renderPedidoVentaGanancia()">
+          <span id="pedido-venta-ganancia" class="pedido-venta-ganancia"></span>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-modal-cancel" onclick="closePedidoModal()">Cancelar</button>
