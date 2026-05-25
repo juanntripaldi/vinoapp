@@ -859,6 +859,7 @@ function exportPDF() {
 /* ─── Favoritos ──────────────────────────────────────────────────────────────── */
 let _favorites = [];
 let favFilters = { tag: 'all', sources: [], search: '', cepa: '' };
+let favChartFilter = { type: null, value: null };
 let favSort = null;
 let favSortDir = 'asc';
 
@@ -947,7 +948,24 @@ function applyFavFilters(favs) {
     const q = favFilters.search.toLowerCase();
     r = r.filter(f => (f.wine.nombre || '').toLowerCase().includes(q) || (f.wine.bodega || '').toLowerCase().includes(q));
   }
+  if (favChartFilter.type === 'source') r = r.filter(f => f.wine.source === favChartFilter.value);
+  if (favChartFilter.type === 'cepa')   r = r.filter(f => f.wine.cepa   === favChartFilter.value);
+  if (favChartFilter.type === 'bodega') r = r.filter(f => f.wine.bodega === favChartFilter.value);
   return r;
+}
+
+function handleFavChartClick(type, value) {
+  if (favChartFilter.type === type && favChartFilter.value === value) {
+    favChartFilter = { type: null, value: null };
+  } else {
+    favChartFilter = { type, value };
+  }
+  renderFavorites();
+}
+
+function clearFavChartFilter() {
+  favChartFilter = { type: null, value: null };
+  renderFavorites();
 }
 
 function setFavTagFilter(tag, btn) {
@@ -977,6 +995,7 @@ function setFavCepa() {
 
 function clearFavFilters() {
   favFilters = { tag: 'all', sources: [], search: '', cepa: '' };
+  favChartFilter = { type: null, value: null };
   const s = document.getElementById('fav-f-search'); if (s) s.value = '';
   const c = document.getElementById('fav-f-cepa');  if (c) c.value = '';
   document.querySelectorAll('.fav-tag-filter-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
@@ -1117,10 +1136,49 @@ function renderFavDashboard(favs, allFavs) {
   if (elGasto)   elGasto.textContent   = totalGasto ? '$' + Math.round(totalGasto).toLocaleString('es-AR') : '—';
   if (elUnits)   elUnits.textContent   = `${totalUnidades} unidad${totalUnidades !== 1 ? 'es' : ''} en total`;
 
+  // Chip de filtro activo por gráfico
+  const PROV_LABELS = { cepas_argentinas: 'Cepas Argentinas', mp_drinks: 'MP Drinks', rustico: 'Rústico' };
+  const TYPE_LABELS = { source: 'Proveedor', cepa: 'Cepa', bodega: 'Bodega' };
+  let chip = document.getElementById('fav-chart-chip');
+  if (!chip) {
+    chip = document.createElement('div');
+    chip.id = 'fav-chart-chip';
+    const dashboard = document.getElementById('fav-dashboard');
+    if (dashboard) dashboard.appendChild(chip);
+  }
+  if (favChartFilter.type) {
+    const label = favChartFilter.type === 'source'
+      ? (PROV_LABELS[favChartFilter.value] || favChartFilter.value)
+      : favChartFilter.value;
+    chip.innerHTML = `<span class="fav-chart-chip-inner">
+      <i class="bi bi-funnel-fill"></i>
+      <strong>${TYPE_LABELS[favChartFilter.type]}:</strong> ${escHtml(label)}
+      <button onclick="clearFavChartFilter()" title="Quitar filtro">✕</button>
+    </span>`;
+    chip.style.display = '';
+  } else {
+    chip.style.display = 'none';
+  }
+
   if (!wines.length) return;
 
   const colors = ['#7B1C2E', '#C9A870', '#2563EB', '#16A34A', '#DC2626', '#9333EA'];
-  const provLabels = { cepas_argentinas: 'Cepas Argentinas', mp_drinks: 'MP Drinks', rustico: 'Rústico' };
+  const PROV_KEY_MAP = Object.fromEntries(Object.entries(PROV_LABELS).map(([k, v]) => [v, k]));
+
+  // Opacidad: resaltar elemento activo, atenuar los demás (solo cuando el filtro aplica a este gráfico)
+  function barColors(baseColors, labels, filterType, keyMap) {
+    if (!favChartFilter.type || favChartFilter.type !== filterType) return baseColors;
+    return labels.map((lbl, i) => {
+      const key = keyMap ? (keyMap[lbl] || lbl) : lbl;
+      const isActive = key === favChartFilter.value;
+      const base = Array.isArray(baseColors) ? baseColors[i % baseColors.length] : baseColors;
+      return isActive ? base : base + '55';
+    });
+  }
+
+  const chartInteract = {
+    onHover: (evt, el) => { if (evt.native) evt.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
+  };
 
   const bySource = {};
   wines.forEach(w => { bySource[w.source] = (bySource[w.source] || []).concat(w); });
@@ -1130,32 +1188,72 @@ function renderFavDashboard(favs, allFavs) {
     const ww = bySource[k].filter(w => w.precio > 0);
     return ww.length ? Math.round(ww.reduce((s, w) => s + w.precio, 0) / ww.length) : 0;
   });
+  const provDisplayLabels = provKeys.map(k => PROV_LABELS[k] || k);
+  const pieColors    = barColors(colors, provDisplayLabels, 'source', PROV_KEY_MAP);
+  const provBgColors = barColors(colors, provDisplayLabels, 'source', PROV_KEY_MAP);
 
   renderChart('fav-chart-prov-pie', 'doughnut', {
-    labels: provKeys.map(k => provLabels[k] || k),
-    datasets: [{ data: provCounts, backgroundColor: colors }],
-  }, { plugins: { legend: { position: 'bottom' } } });
+    labels: provDisplayLabels,
+    datasets: [{ data: provCounts, backgroundColor: pieColors }],
+  }, {
+    plugins: { legend: { position: 'bottom' } },
+    ...chartInteract,
+    onClick: (evt, els, chart) => {
+      if (!els.length) { clearFavChartFilter(); return; }
+      const lbl = chart.data.labels[els[0].index];
+      handleFavChartClick('source', PROV_KEY_MAP[lbl] || lbl);
+    },
+  });
 
   renderChart('fav-chart-prov-price', 'bar', {
-    labels: provKeys.map(k => provLabels[k] || k),
-    datasets: [{ label: 'Precio promedio ($)', data: provAvgPrice, backgroundColor: colors }],
-  }, { plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => '$' + v.toLocaleString('es-AR') } } } });
+    labels: provDisplayLabels,
+    datasets: [{ label: 'Precio promedio ($)', data: provAvgPrice, backgroundColor: provBgColors }],
+  }, {
+    plugins: { legend: { display: false } },
+    scales: { y: { ticks: { callback: v => '$' + v.toLocaleString('es-AR') } } },
+    ...chartInteract,
+    onClick: (evt, els, chart) => {
+      if (!els.length) { clearFavChartFilter(); return; }
+      const lbl = chart.data.labels[els[0].index];
+      handleFavChartClick('source', PROV_KEY_MAP[lbl] || lbl);
+    },
+  });
 
   const bycepa = {};
   wines.forEach(w => { if (w.cepa) bycepa[w.cepa] = (bycepa[w.cepa] || 0) + 1; });
   const topCepas = Object.entries(bycepa).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const cepaLabels = topCepas.map(([c]) => c);
+  const cepaBg = barColors('#7B1C2E', cepaLabels, 'cepa', null);
+
   renderChart('fav-chart-cepas', 'bar', {
-    labels: topCepas.map(([c]) => c),
-    datasets: [{ label: 'Cantidad', data: topCepas.map(([, n]) => n), backgroundColor: '#7B1C2E' }],
-  }, { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } });
+    labels: cepaLabels,
+    datasets: [{ label: 'Cantidad', data: topCepas.map(([, n]) => n), backgroundColor: cepaBg }],
+  }, {
+    indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } },
+    ...chartInteract,
+    onClick: (evt, els, chart) => {
+      if (!els.length) { clearFavChartFilter(); return; }
+      handleFavChartClick('cepa', chart.data.labels[els[0].index]);
+    },
+  });
 
   const bybodega = {};
   wines.forEach(w => { if (w.bodega) bybodega[w.bodega] = (bybodega[w.bodega] || 0) + 1; });
   const topBodegas = Object.entries(bybodega).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const bodegaLabels = topBodegas.map(([b]) => b);
+  const bodegaBg = barColors('#C9A870', bodegaLabels, 'bodega', null);
+
   renderChart('fav-chart-bodegas', 'bar', {
-    labels: topBodegas.map(([b]) => b),
-    datasets: [{ label: 'Vinos', data: topBodegas.map(([, n]) => n), backgroundColor: '#C9A870' }],
-  }, { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } });
+    labels: bodegaLabels,
+    datasets: [{ label: 'Vinos', data: topBodegas.map(([, n]) => n), backgroundColor: bodegaBg }],
+  }, {
+    indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } },
+    ...chartInteract,
+    onClick: (evt, els, chart) => {
+      if (!els.length) { clearFavChartFilter(); return; }
+      handleFavChartClick('bodega', chart.data.labels[els[0].index]);
+    },
+  });
 }
 
 /* ─── Cotizador ──────────────────────────────────────────────────────────────── */
