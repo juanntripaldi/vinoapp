@@ -99,6 +99,15 @@ async function _apiUpdateOrder(id, fields) {
   if (o) Object.assign(o, fields);
 }
 
+async function toggleExcluirStats(id) {
+  const o = _orders.find(o => o.id === id);
+  if (!o) return;
+  const val = !o.excluir_stats;
+  await _apiUpdateOrder(id, { excluir_stats: val });
+  renderOrdersDash();
+  renderOrdersList();
+}
+
 async function _apiDeleteOrder(id) {
   await fetch(`/api/orders/${id}`, { method: 'DELETE' });
   _orders = _orders.filter(o => o.id !== id);
@@ -432,7 +441,8 @@ function renderOrdersDash() {
   const el = document.getElementById('orders-dash');
   if (!el) return;
 
-  const list = _orders.filter(o => o.estado !== 'cancelado');
+  const list = _orders.filter(o => o.estado !== 'cancelado' && !o.excluir_stats);
+  const excluidos = _orders.filter(o => o.excluir_stats).length;
   if (!list.length) { el.innerHTML = ''; return; }
 
   const conVenta  = list.filter(o => o.total_venta != null && o.total_venta > 0);
@@ -501,6 +511,7 @@ function renderOrdersDash() {
           <div class="odash-kpi-label">Proyección anual <small>(×12 últimos 3m)</small></div>
         </div>` : ''}
       </div>
+      ${excluidos > 0 ? `<div class="odash-excluidos"><i class="bi bi-eye-slash"></i> ${excluidos} pedido${excluidos !== 1 ? 's' : ''} excluido${excluidos !== 1 ? 's' : ''} de las métricas</div>` : ''}
       <div class="odash-charts">
         <div class="odash-chart-card">
           <div class="odash-chart-title">Evolución mensual</div>
@@ -622,6 +633,7 @@ function renderOrdersList() {
       <td class="td-venta">${ventaHtml}</td>
       <td class="td-gan">${ganHtml}</td>
       <td class="td-order-actions" onclick="event.stopPropagation()">
+        <button class="btn-order-action ${o.excluir_stats ? 'btn-excluido' : ''}" onclick="toggleExcluirStats(${o.id})" title="${o.excluir_stats ? 'Excluido de stats — click para incluir' : 'Incluido en stats — click para excluir'}"><i class="bi bi-graph-up${o.excluir_stats ? '-arrow' : ''}"></i></button>
         <button class="btn-order-action" onclick="openPedidoModal(${o.id})" title="Editar"><i class="bi bi-pencil"></i></button>
         <button class="btn-order-action btn-order-del" onclick="confirmDeleteOrder(${o.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
       </td>

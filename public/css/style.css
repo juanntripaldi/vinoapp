@@ -1209,6 +1209,10 @@ body {
 .td-venta { padding:12px 14px; }
 .td-venta-val { font-weight:600;color:#2e9e5c; }
 
+/* Excluir stats */
+.btn-excluido { color:var(--text-muted) !important;opacity:0.45; }
+.odash-excluidos { font-size:0.78rem;color:var(--text-muted);margin:-6px 0 14px;padding-left:2px; }
+
 /* Sortable headers */
 .th-sort { cursor:pointer;user-select:none;white-space:nowrap; }
 .th-sort:hover { color:var(--wine); }

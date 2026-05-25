@@ -481,7 +481,7 @@ async function addOrder(data) {
 }
 
 async function updateOrderById(id, fields) {
-  const allowed = ['cliente_id', 'cliente_nombre', 'fecha', 'estado', 'items', 'notas', 'total_venta'];
+  const allowed = ['cliente_id', 'cliente_nombre', 'fecha', 'estado', 'items', 'notas', 'total_venta', 'excluir_stats'];
   const update = {};
   for (const k of allowed) if (k in fields) update[k] = fields[k];
   if (fields.items) {
