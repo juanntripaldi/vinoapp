@@ -1209,6 +1209,11 @@ body {
 .td-venta { padding:12px 14px; }
 .td-venta-val { font-weight:600;color:#2e9e5c; }
 
+/* Sortable headers */
+.th-sort { cursor:pointer;user-select:none;white-space:nowrap; }
+.th-sort:hover { color:var(--wine); }
+.sort-icon { font-size:0.7rem;margin-left:2px;color:var(--wine); }
+
 /* Import modal */
 .import-instructions { font-size:0.88rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6; }
 .import-instructions code { background:var(--bg);padding:1px 5px;border-radius:4px;font-size:0.82rem; }

@@ -445,7 +445,15 @@
         <table class="orders-table">
           <thead>
             <tr>
-              <th>#</th><th>Fecha</th><th>Cliente</th><th>Estado</th><th>Ítems</th><th>Costo</th><th>Venta</th><th>Ganancia</th><th></th>
+              <th class="th-sort" onclick="sortOrdersBy('numero')"># <span class="sort-icon" data-col="numero"></span></th>
+              <th class="th-sort" onclick="sortOrdersBy('fecha')">Fecha <span class="sort-icon" data-col="fecha"></span></th>
+              <th class="th-sort" onclick="sortOrdersBy('cliente')">Cliente <span class="sort-icon" data-col="cliente"></span></th>
+              <th class="th-sort" onclick="sortOrdersBy('estado')">Estado <span class="sort-icon" data-col="estado"></span></th>
+              <th class="th-sort" onclick="sortOrdersBy('items')">Ítems <span class="sort-icon" data-col="items"></span></th>
+              <th class="th-sort" onclick="sortOrdersBy('costo')">Costo <span class="sort-icon" data-col="costo"></span></th>
+              <th class="th-sort" onclick="sortOrdersBy('venta')">Venta <span class="sort-icon" data-col="venta"></span></th>
+              <th class="th-sort" onclick="sortOrdersBy('ganancia')">Ganancia <span class="sort-icon" data-col="ganancia"></span></th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="orders-tbody">

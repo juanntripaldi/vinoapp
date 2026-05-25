@@ -388,6 +388,14 @@ function renderActivePedidoBanner() {
     </div>`;
 }
 
+let _ordersSort = { col: 'fecha', dir: -1 }; // -1 = desc, 1 = asc
+
+function sortOrdersBy(col) {
+  if (_ordersSort.col === col) _ordersSort.dir *= -1;
+  else { _ordersSort.col = col; _ordersSort.dir = col === 'numero' ? -1 : 1; }
+  renderOrdersList();
+}
+
 function _filteredOrders() {
   let list = [..._orders];
   const fCliente = (document.getElementById('filter-order-cliente')?.value || '').toLowerCase();
@@ -398,6 +406,23 @@ function _filteredOrders() {
   if (fEstado)  list = list.filter(o => o.estado === fEstado);
   if (fDesde)   list = list.filter(o => String(o.fecha) >= fDesde);
   if (fHasta)   list = list.filter(o => String(o.fecha) <= fHasta);
+
+  const { col, dir } = _ordersSort;
+  list.sort((a, b) => {
+    let va, vb;
+    if (col === 'numero')    { va = a.numero || 0;           vb = b.numero || 0; }
+    else if (col === 'fecha'){ va = a.fecha  || '';           vb = b.fecha  || ''; }
+    else if (col === 'cliente') { va = (a.cliente_nombre||'').toLowerCase(); vb = (b.cliente_nombre||'').toLowerCase(); }
+    else if (col === 'estado')  { va = a.estado || '';        vb = b.estado || ''; }
+    else if (col === 'items')   { va = (a.items||[]).length;  vb = (b.items||[]).length; }
+    else if (col === 'costo')   { va = a.total || 0;          vb = b.total  || 0; }
+    else if (col === 'venta')   { va = a.total_venta ?? -1;   vb = b.total_venta ?? -1; }
+    else if (col === 'ganancia'){ va = (a.total_venta != null ? a.total_venta - a.total : -Infinity); vb = (b.total_venta != null ? b.total_venta - b.total : -Infinity); }
+    else { va = 0; vb = 0; }
+    if (va < vb) return -dir;
+    if (va > vb) return  dir;
+    return 0;
+  });
   return list;
 }
 
@@ -553,6 +578,12 @@ function renderOrdersDash() {
 function renderOrdersList() {
   const tbody = document.getElementById('orders-tbody');
   if (!tbody) return;
+
+  // Update sort icons
+  document.querySelectorAll('.sort-icon').forEach(el => {
+    const col = el.dataset.col;
+    el.textContent = col === _ordersSort.col ? (_ordersSort.dir === 1 ? '↑' : '↓') : '';
+  });
 
   const list = _filteredOrders();
 
