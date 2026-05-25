@@ -296,6 +296,12 @@
         <button class="hf-btn" data-hf="removed" onclick="setHistorialFilter('removed', this)"><i class="bi bi-dash-circle"></i> Quitados</button>
         <button class="hf-btn" data-hf="price_change" onclick="setHistorialFilter('price_change', this)"><i class="bi bi-arrow-left-right"></i> Cambios de precio</button>
       </div>
+      <div class="historial-filters" style="margin-top:8px">
+        <button class="hf-src-btn active" onclick="setHistorialSource('all', this)">Todos los proveedores</button>
+        <button class="hf-src-btn" onclick="setHistorialSource('cepas_argentinas', this)"><span class="dot dot-cepas"></span> Cepas Argentinas</button>
+        <button class="hf-src-btn" onclick="setHistorialSource('mp_drinks', this)"><span class="dot dot-mp"></span> MP Drinks</button>
+        <button class="hf-src-btn" onclick="setHistorialSource('rustico', this)"><span class="dot dot-rustico"></span> Rústico</button>
+      </div>
       <div id="historial-list" class="historial-list">
         <div class="historial-empty">Cargando historial...</div>
       </div>

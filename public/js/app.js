@@ -9,6 +9,7 @@ let debounceTimer = null;
 let isUpdating = false;
 let currentWines = [];
 let historialFilter = 'all';
+let historialSource = 'all';
 let histSort = 'date';
 let histSortDir = 'desc';
 let allHistory = [];
@@ -583,6 +584,13 @@ function setHistorialFilter(type, btn) {
   renderHistory();
 }
 
+function setHistorialSource(source, btn) {
+  historialSource = source;
+  document.querySelectorAll('.hf-src-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHistory();
+}
+
 function setHistSort(col) {
   if (histSort === col) histSortDir = histSortDir === 'asc' ? 'desc' : 'asc';
   else { histSort = col; histSortDir = col === 'date' ? 'desc' : 'asc'; }
@@ -605,7 +613,9 @@ function renderHistory() {
   const typeIcon  = { added: 'bi-plus-lg', removed: 'bi-dash-lg', price_change: 'bi-arrow-left-right' };
   const typeLabel = { added: 'Agregado', removed: 'Quitado', price_change: 'Cambio' };
 
-  let items = (historialFilter === 'all' ? allHistory : allHistory.filter(h => h.type === historialFilter))
+  let items = allHistory
+    .filter(h => historialFilter === 'all' || h.type === historialFilter)
+    .filter(h => historialSource === 'all' || h.source === historialSource)
     .map(h => ({
       ...h,
       precio_prev: h.type === 'price_change' ? h.precio_old : (h.type === 'removed' ? h.precio : null),

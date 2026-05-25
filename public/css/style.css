@@ -724,6 +724,10 @@ body {
 }
 .hf-btn:hover { border-color: var(--wine); color: var(--wine); }
 .hf-btn.active { background: var(--wine); color: white; border-color: var(--wine); }
+.hf-src-btn { background: white; border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 0.82rem; cursor: pointer; color: var(--text-muted); display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s; }
+.hf-src-btn:hover { border-color: var(--wine); color: var(--wine); }
+.hf-src-btn.active { background: var(--wine); color: white; border-color: var(--wine); }
+.hf-src-btn.active .dot { opacity: 0.85; }
 .historial-list { display: flex; flex-direction: column; gap: 8px; }
 .historial-empty { text-align: center; padding: 50px 20px; color: var(--text-muted); font-size: 0.9rem; }
 .historial-group-date {
